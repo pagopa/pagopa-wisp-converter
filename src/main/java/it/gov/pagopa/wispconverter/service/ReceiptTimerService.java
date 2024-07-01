@@ -7,8 +7,11 @@ import it.gov.pagopa.wispconverter.controller.model.ReceiptTimerRequest;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.repository.CacheRepository;
+import it.gov.pagopa.wispconverter.repository.model.enumz.InternalStepStatus;
 import it.gov.pagopa.wispconverter.service.model.ReceiptDto;
+import it.gov.pagopa.wispconverter.service.model.re.ReEventDto;
 import it.gov.pagopa.wispconverter.util.LogUtils;
+import it.gov.pagopa.wispconverter.util.ReUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +21,8 @@ import javax.annotation.PostConstruct;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+
+import static it.gov.pagopa.wispconverter.util.Constants.PAA_INVIA_RT;
 
 @Service
 @Slf4j
@@ -35,6 +40,8 @@ public class ReceiptTimerService {
     private ServiceBusSenderClient serviceBusSenderClient;
 
     private final CacheRepository cacheRepository;
+
+    private final ReService reService;
 
     @PostConstruct
     public void post() {
@@ -65,6 +72,9 @@ public class ReceiptTimerService {
         // insert {wisp_timer_<paymentToken>, sequenceNumber} for Duplicate Prevention Logic and for call cancelScheduledMessage(sequenceNumber)
         cacheRepository.insert(sequenceNumberKey, String.valueOf(sequenceNumber), message.getExpirationTime(), ChronoUnit.MILLIS);
         log.debug("Cache sequence number {} for payment-token: {}", sequenceNumber, sequenceNumberKey);
+
+        // insert in queue action registered in RE
+        generateRE(InternalStepStatus.RT_BUS_QUEUE_INSERTED, message.getNoticeNumber(), message.getPaymentToken());
     }
 
     public void cancelScheduledMessage(List<String> paymentTokens) {
@@ -84,6 +94,8 @@ public class ReceiptTimerService {
             cacheRepository.delete(sequenceNumberKey);
             log.debug("Deleted sequence number {} for payment-token: {} from cache", sequenceNumberString, sequenceNumberKey);
         }
+        // cancel scheduled message action registered in RE
+        generateRE(InternalStepStatus.RT_BUS_QUEUE_DELETED, null, paymentToken);
     }
 
     public boolean callCancelScheduledMessage(String sequenceNumberString) {
@@ -94,5 +106,17 @@ public class ReceiptTimerService {
         } catch (Exception exception) {
             throw new AppException(AppErrorCodeMessageEnum.PERSISTENCE_SERVICE_BUS_CANCEL_ERROR, exception.getMessage());
         }
+    }
+
+    private void generateRE(InternalStepStatus status, String noticeNumber, String paymentToken) {
+
+        // setting data in MDC for next use
+        ReEventDto reEvent = ReUtil.getREBuilder()
+                .primitive(PAA_INVIA_RT)
+                .status(status)
+                .noticeNumber(noticeNumber)
+                .paymentToken(paymentToken)
+                .build();
+        reService.addRe(reEvent);
     }
 }
