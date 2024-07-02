@@ -17,8 +17,11 @@ import it.gov.pagopa.wispconverter.service.model.session.CommonFieldsDTO;
 import it.gov.pagopa.wispconverter.service.model.session.SessionDataDTO;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.springframework.data.util.Pair;
 
 import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -83,6 +86,18 @@ public class CommonUtility {
         } catch (Exception e) {
             throw new AppException(AppErrorCodeMessageEnum.PARSING_GENERIC_ERROR);
         }
+    }
+
+    public static List<Pair<String, String>> constructHeadersForPaaInviaRT(String startingUrl, StationDto station, String stationInForwarderPartialPath) {
+        List<Pair<String, String>> headers = new LinkedList<>();
+        headers.add(Pair.of("SOAPAction", "paaInviaRT"));
+        if (startingUrl.contains(stationInForwarderPartialPath)) {
+            ServiceDto stationService = station.getService();
+            headers.add(Pair.of("X-Host-Url", stationService.getTargetHost() == null ? "ND" : stationService.getTargetHost()));
+            headers.add(Pair.of("X-Host-Port", stationService.getTargetPort() == null ? "ND" : String.valueOf(stationService.getTargetPort())));
+            headers.add(Pair.of("X-Host-Path", stationService.getTargetPath() == null ? "ND" : stationService.getTargetPath()));
+        }
+        return headers;
     }
 
     public static String getConfigKeyValueCache(Map<String, it.gov.pagopa.gen.wispconverter.client.cache.model.ConfigurationKeyDto> configurations, String key) {

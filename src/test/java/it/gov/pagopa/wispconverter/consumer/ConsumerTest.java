@@ -27,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +44,7 @@ class ConsumerTest {
                 .retry(retries)
                 .receiptType(type)
                 .url(url)
+                .headers(List.of("soapaction:paaInviaRT"))
                 .idempotencyKey("idpa_uuid_nav")
                 .build();
     }
@@ -204,7 +206,7 @@ class ConsumerTest {
         when(ccs.getConfigData()).thenReturn(TestUtils.configData("mystation"));
 
         PaaInviaRTSenderService paaInviaRTSenderService = mock(PaaInviaRTSenderService.class);
-        doThrow(new AppException(AppErrorCodeMessageEnum.PARSING_GENERIC_ERROR)).when(paaInviaRTSenderService).sendToCreditorInstitution(any(), any());
+        doThrow(new AppException(AppErrorCodeMessageEnum.PARSING_GENERIC_ERROR)).when(paaInviaRTSenderService).sendToCreditorInstitution(any(), any(), any());
 
         ReflectionTestUtils.setField(rtConsumer, "rtCosmosService", rtCosmosService);
         ReflectionTestUtils.setField(rtConsumer, "paaInviaRTSenderService", paaInviaRTSenderService);
@@ -261,7 +263,7 @@ class ConsumerTest {
         when(ccs.getConfigData()).thenReturn(TestUtils.configData("mystation"));
 
         PaaInviaRTSenderService paaInviaRTSenderService = mock(PaaInviaRTSenderService.class);
-        doThrow(new AppException(AppErrorCodeMessageEnum.PARSING_GENERIC_ERROR)).when(paaInviaRTSenderService).sendToCreditorInstitution(any(), any());
+        doThrow(new AppException(AppErrorCodeMessageEnum.PARSING_GENERIC_ERROR)).when(paaInviaRTSenderService).sendToCreditorInstitution(any(), any(), any());
 
         ReflectionTestUtils.setField(rtConsumer, "rtCosmosService", rtCosmosService);
         ReflectionTestUtils.setField(rtConsumer, "paaInviaRTSenderService", paaInviaRTSenderService);

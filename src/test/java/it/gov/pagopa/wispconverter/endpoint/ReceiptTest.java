@@ -213,7 +213,7 @@ class ReceiptTest {
 
         // mocking error response from creditor institution
         doThrow(new AppException(AppErrorCodeMessageEnum.RECEIPT_GENERATION_ERROR_RESPONSE_FROM_CREDITOR_INSTITUTION, "PAA_ERRORE_RESPONSE", "PAA_ERRORE_RESPONSE", "Errore PA"))
-                .when(paaInviaRTSenderService).sendToCreditorInstitution(anyString(), anyString());
+                .when(paaInviaRTSenderService).sendToCreditorInstitution(anyString(), any(), anyString());
 
         mvc.perform(MockMvcRequestBuilders.post("/receipt/ok")
                         .accept(MediaType.APPLICATION_JSON)
@@ -226,7 +226,7 @@ class ReceiptTest {
                             assertNotNull(result.getResponse());
                         });
 
-        verify(paaInviaRTSenderService, times(1)).sendToCreditorInstitution(anyString(), anyString());
+        verify(paaInviaRTSenderService, times(1)).sendToCreditorInstitution(anyString(), any(), anyString());
     }
 
     @ParameterizedTest
@@ -422,7 +422,7 @@ class ReceiptTest {
                 .paymentToken("token01")
                 .build());
         doThrow(new AppException(AppErrorCodeMessageEnum.RECEIPT_GENERATION_ERROR_RESPONSE_FROM_CREDITOR_INSTITUTION, "PAA_ERRORE_RESPONSE", "PAA_ERRORE_RESPONSE", "Errore PA"))
-                .when(paaInviaRTSenderService).sendToCreditorInstitution(anyString(), anyString());
+                .when(paaInviaRTSenderService).sendToCreditorInstitution(anyString(), any(), anyString());
 
         mvc.perform(MockMvcRequestBuilders.post("/receipt/ko")
                         .accept(MediaType.APPLICATION_JSON)
@@ -435,6 +435,6 @@ class ReceiptTest {
                             assertNotNull(result.getResponse());
                         });
 
-        verify(paaInviaRTSenderService, times(1)).sendToCreditorInstitution(anyString(), anyString());
+        verify(paaInviaRTSenderService, times(1)).sendToCreditorInstitution(anyString(), any(), anyString());
     }
 }

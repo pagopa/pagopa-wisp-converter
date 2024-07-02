@@ -14,14 +14,15 @@ import it.gov.pagopa.wispconverter.service.model.re.ReEventDto;
 import it.gov.pagopa.wispconverter.util.*;
 import jakarta.xml.soap.SOAPMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
-import java.time.ZonedDateTime;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -127,7 +128,7 @@ public class RTConsumer extends SBConsumer {
             MDCUtil.setSessionDataInfoInMDC(header, idempotencyKeySections[2]);
 
             String rawPayload = new String(unzippedPayload);
-            paaInviaRTSenderService.sendToCreditorInstitution(receipt.getUrl(), rawPayload);
+            paaInviaRTSenderService.sendToCreditorInstitution(receipt.getUrl(), extractHeaders(receipt.getHeaders()), rawPayload);
             rtCosmosService.deleteRTRequestEntity(receipt);
             log.info("Sent receipt [{}]", receiptId);
 
@@ -146,6 +147,17 @@ public class RTConsumer extends SBConsumer {
 
             throw new AppException(AppErrorCodeMessageEnum.PARSING_INVALID_ZIPPED_PAYLOAD);
         }
+    }
+
+    private List<Pair<String, String>> extractHeaders(List<String> headers) {
+        List<Pair<String, String>> headerPairs = new LinkedList<>();
+        for (String rawHeader : headers) {
+            String[] keys = rawHeader.split(":");
+            if (keys.length == 2) {
+                headerPairs.add(Pair.of(keys[0], keys[1]));
+            }
+        }
+        return headerPairs;
     }
 
     private void reScheduleReceiptSend(RTRequestEntity receipt, String receiptId, String compositedIdForReceipt) {

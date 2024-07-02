@@ -31,12 +31,14 @@ import jakarta.xml.soap.SOAPMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,6 +76,9 @@ public class ReceiptService {
 
     @Value("${wisp-converter.station-in-gpd.partial-path}")
     private String stationInGpdPartialPath;
+
+    @Value("${wisp-converter.station-in-forwarder.partial-path}")
+    private String stationInForwarderPartialPath;
 
     @Value("${wisp-converter.rt-send.scheduling-time-in-hours}")
     private Integer schedulingTimeInHours;
@@ -258,6 +263,7 @@ public class ReceiptService {
                 null,
                 null
         );
+        List<Pair<String, String>> headers = CommonUtility.constructHeadersForPaaInviaRT(url, station, stationInForwarderPartialPath);
 
         // idempotency key creation to check if the rt has already been sent
         String idempotencyKey = sessionData.getCommonFields().getSessionId() + "_" + noticeNumber;
@@ -277,7 +283,7 @@ public class ReceiptService {
             try {
 
                 // send the receipt to the creditor institution via the URL set in the station configuration
-                paaInviaRTSenderService.sendToCreditorInstitution(url, rawPayload);
+                paaInviaRTSenderService.sendToCreditorInstitution(url, headers, rawPayload);
 
                 // generate a new event in RE for store the successful sending of the receipt
                 generateREForSentRT(sessionData, iuv, noticeNumber);
@@ -290,7 +296,7 @@ public class ReceiptService {
                 generateREForNotSentRT(sessionData, iuv, noticeNumber, e.getMessage());
 
                 // because of the not sent receipt, it is necessary to schedule a retry of the sending process for this receipt
-                scheduleRTSend(sessionData, url, rawPayload, station, iuv, noticeNumber, idempotencyKey, receiptType);
+                scheduleRTSend(sessionData, url, headers, rawPayload, station, iuv, noticeNumber, idempotencyKey, receiptType);
 
                 idempotencyStatus = IdempotencyStatusEnum.FAILED;
             }
@@ -415,10 +421,15 @@ public class ReceiptService {
     }
 
 
-    private void scheduleRTSend(SessionDataDTO sessionData, String url, String payload, StationDto station,
+    private void scheduleRTSend(SessionDataDTO sessionData, String url, List<Pair<String, String>> headers, String payload, StationDto station,
                                 String iuv, String noticeNumber, String idempotencyKey, ReceiptTypeEnum receiptType) {
 
         try {
+
+            List<String> formattedHeaders = new LinkedList<>();
+            for (Pair<String, String> header : headers) {
+                formattedHeaders.add(header.getFirst() + ":" + header.getSecond());
+            }
 
             // generate the RT to be persisted in storage, then save in the same storage
             RTRequestEntity rtRequestEntity = RTRequestEntity.builder()
@@ -427,6 +438,7 @@ public class ReceiptService {
                     .partitionKey(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()).toString())
                     .payload(AppBase64Util.base64Encode(ZipUtil.zip(payload)))
                     .url(url)
+                    .headers(formattedHeaders)
                     .retry(0)
                     .idempotencyKey(idempotencyKey)
                     .receiptType(receiptType)

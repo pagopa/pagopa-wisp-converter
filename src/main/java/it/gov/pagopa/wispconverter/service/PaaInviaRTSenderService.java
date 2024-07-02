@@ -13,6 +13,7 @@ import it.gov.pagopa.wispconverter.util.JaxbElementUtil;
 import it.gov.pagopa.wispconverter.util.ReUtil;
 import jakarta.xml.soap.SOAPMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,23 +34,24 @@ public class PaaInviaRTSenderService {
 
     private final JaxbElementUtil jaxbElementUtil;
 
-    public void sendToCreditorInstitution(String url, String payload) {
+    public void sendToCreditorInstitution(String url, List<Pair<String, String>> headers, String payload) {
 
         try {
 
             // Generating the REST client and send the passed request payload to the passed URL
             RestClient client = restClientBuilder.build();
+            RestClient.RequestBodySpec bodySpec = client.post()
+                    .uri(URI.create(url))
+                    .body(payload);
+            for (Pair<String, String> header : headers) {
+                bodySpec.header(header.getFirst(), header.getSecond());
+            }
 
             // Save an RE event in order to track the communication with creditor institution
-            generateREForRequestToCreditorInstitution(url, payload);
+            generateREForRequestToCreditorInstitution(url, headers, payload);
 
             // Communicating with creditor institution sending the paaInviaRT request
-            ResponseEntity<String> response = client.post()
-                    .uri(URI.create(url))
-                    .header("SOAPAction", "paaInviaRT")
-                    .body(payload)
-                    .retrieve()
-                    .toEntity(String.class);
+            ResponseEntity<String> response = bodySpec.retrieve().toEntity(String.class);
 
             // check SOAP response and extract body if it is valid
             String bodyPayload = response.getBody();
@@ -112,10 +115,13 @@ public class PaaInviaRTSenderService {
     }
 
 
-    private void generateREForRequestToCreditorInstitution(String uri, String body) {
+    private void generateREForRequestToCreditorInstitution(String uri, List<Pair<String, String>> headers, String body) {
+
+        StringBuilder headerBuilder = new StringBuilder();
+        headers.forEach(header -> headerBuilder.append(", ").append(header.getFirst()).append(": [\"").append(header.getSecond()).append("\"]"));
 
         // setting data in MDC for next use
-        ReEventDto reEvent = ReUtil.createREForClientInterfaceInRequestEvent("POST", uri, "SOAPAction: paaInviaRT", body, ClientEnum.CREDITOR_INSTITUTION_ENDPOINT, OutcomeEnum.SEND);
+        ReEventDto reEvent = ReUtil.createREForClientInterfaceInRequestEvent("POST", uri, headerBuilder.toString(), body, ClientEnum.CREDITOR_INSTITUTION_ENDPOINT, OutcomeEnum.SEND);
         reService.addRe(reEvent);
     }
 

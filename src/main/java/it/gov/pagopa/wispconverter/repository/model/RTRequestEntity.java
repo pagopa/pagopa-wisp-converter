@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
 
+import java.util.List;
+
 @Container(containerName = "receipt")
 @Data
 @ToString(exclude = "payload")
@@ -29,6 +31,8 @@ public class RTRequestEntity {
     private ReceiptTypeEnum receiptType;
 
     private String url;
+
+    private List<String> headers;
 
     private Integer retry;
 

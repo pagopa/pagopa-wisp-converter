@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "WISP-Converter-redirect",
-    "version": "0.0.36"
+    "version": "0.0.36-1-PAGOPA-1903-fix-url-paa-invia-rt"
   },
   "servers": [
     {

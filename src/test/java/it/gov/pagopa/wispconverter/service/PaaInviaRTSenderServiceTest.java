@@ -6,10 +6,12 @@ import gov.telematici.pagamenti.ws.papernodo.PaaInviaRTRisposta;
 import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.util.JaxbElementUtil;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -38,19 +40,13 @@ class PaaInviaRTSenderServiceTest {
         RestClient.ResponseSpec responseSpec = mock(RestClient.ResponseSpec.class);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
 
-        /*
-        EsitoPaaInviaRT esitoPaaInviaRT = new EsitoPaaInviaRT();
-        esitoPaaInviaRT.setEsito("OK");
-        PaaInviaRTRisposta paaInviaRTRisposta = new PaaInviaRTRisposta();
-        paaInviaRTRisposta.setPaaInviaRTRisposta(esitoPaaInviaRT);
-         */
         String paaInviaRTRisposta = "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns3:paaInviaRTRisposta xmlns:ns2=\"http://ws.pagamenti.telematici.gov/ppthead\" xmlns:ns3=\"http://ws.pagamenti.telematici.gov/\"><paaInviaRTRisposta><esito>OK</esito></paaInviaRTRisposta></ns3:paaInviaRTRisposta></soap:Body></soap:Envelope>";
         when(responseSpec.toEntity(String.class))
                 .thenReturn(ResponseEntity.ok().body(paaInviaRTRisposta));
 
         PaaInviaRTSenderService p = new PaaInviaRTSenderService(builder, reService, jaxbElementUtil);
         org.springframework.test.util.ReflectionTestUtils.setField(p, "jaxbElementUtil", new JaxbElementUtil());
-        p.sendToCreditorInstitution("", "");
+        p.sendToCreditorInstitution("", List.of(Pair.of("soapaction", "paaInviaRT")), "");
         assertTrue(true);
     }
 
@@ -81,7 +77,7 @@ class PaaInviaRTSenderServiceTest {
 
         PaaInviaRTSenderService p = new PaaInviaRTSenderService(builder, reService, jaxbElementUtil);
         try {
-            p.sendToCreditorInstitution("", "");
+            p.sendToCreditorInstitution("", List.of(Pair.of("soapaction", "paaInviaRT")), "");
             fail();
         } catch (AppException e) {
             assertTrue(true);
