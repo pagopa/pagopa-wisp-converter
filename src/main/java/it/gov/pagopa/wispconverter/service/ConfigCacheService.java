@@ -29,7 +29,7 @@ public class ConfigCacheService {
     private List<String> cacheKeys;
 
     public void refreshCache() {
-        log.info("loadCache from cache api");
+        log.debug("loadCache from cache api");
 
         try {
             it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi apiInstance = new it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi(configCacheClient);

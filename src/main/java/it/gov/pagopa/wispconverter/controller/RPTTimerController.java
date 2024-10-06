@@ -51,9 +51,9 @@ public class RPTTimerController {
     @Trace(businessProcess = RPT_BP_TIMER_SET, reEnabled = true)
     public void createTimer(@RequestBody RPTTimerRequest request) {
         try {
-            log.info("Invoking API operation createRPTTimer - args: {}", sanitizeInput(request.toString()));
+            log.debug("Invoking API operation createRPTTimer - args: {}", sanitizeInput(request.toString()));
             rptTimerService.sendMessage(request);
-            log.info("Successful API operation createRPTTimer");
+            log.debug("Successful API operation createRPTTimer");
         } catch (Exception ex) {
             if(!(ex instanceof AppException)) {
                 String operationId = MDC.get(Constants.MDC_OPERATION_ID);
@@ -77,9 +77,9 @@ public class RPTTimerController {
     @Trace(businessProcess = RPT_BP_TIMER_DELETE, reEnabled = true)
     public void deleteTimer(@RequestParam() String sessionId) {
         try {
-            log.info("Invoking API operation deleteRPTTimer - args: {}", sanitizeInput(sessionId));
+            log.debug("Invoking API operation deleteRPTTimer - args: {}", sanitizeInput(sessionId));
             rptTimerService.cancelScheduledMessage(sessionId);
-            log.info("Successful API operation deleteRPTTimer");
+            log.debug("Successful API operation deleteRPTTimer");
         } catch (Exception ex) {
             String operationId = MDC.get(Constants.MDC_OPERATION_ID);
             log.error(String.format("GenericException: operation-id=[%s]", operationId != null ? operationId : "n/a"), ex);

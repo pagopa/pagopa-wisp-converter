@@ -98,7 +98,7 @@ public class RPTTimerService {
         Long sequenceNumber = serviceBusSenderClient.scheduleMessage(serviceBusMessage, scheduledExpirationTime);
 
         // log event
-        log.info("Sent scheduled message_base64 {} to the queue: {}", LogUtils.encodeToBase64(sanitizeInput(message.toString())), queueName);
+        log.debug("Sent scheduled message_base64 {} to the queue: {}", LogUtils.encodeToBase64(sanitizeInput(message.toString())), queueName);
         generateRE(InternalStepStatus.RPT_TIMER_CREATED, "Scheduled RPTTimerService: [" + message + "]");
 
         // insert in Redis cache sequenceNumber of the message
@@ -123,7 +123,7 @@ public class RPTTimerService {
 
             // cancel scheduled message in the service bus queue
             callCancelScheduledMessage(sequenceNumber);
-            log.info("Canceled scheduled message for rpt_timer_base64 {}", LogUtils.encodeToBase64(sanitizeInput(sessionId)));
+            log.debug("Canceled scheduled message for rpt_timer_base64 {}", LogUtils.encodeToBase64(sanitizeInput(sessionId)));
 
             // delete the sequenceNumber from the Redis cache
             cacheRepository.delete(key);

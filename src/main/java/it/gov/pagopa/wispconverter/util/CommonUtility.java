@@ -230,10 +230,6 @@ public class CommonUtility {
     }
 
     public static String sanitizeInput(String input) {
-        if (input.matches("\\w*")) {
-            return input;
-        } else {
-            return "suspicious input";
-        }
+        return input != null ? input.replace("\n", "").replaceAll("[^a-zA-Z0-9_\\-+/]", "") : "";
     }
 }
