@@ -1,4 +1,4 @@
-microservice-chart:
+microservice-chart: &microservice-chart
   namespace: "nodo"
   nameOverride: ""
   fullnameOverride: ""
@@ -27,7 +27,7 @@ microservice-chart:
     type: ClusterIP
     ports:
       - 8080
-  ingress:
+  ingress: &ingress
     create: true
     host: "weudev.nodo.internal.dev.platform.pagopa.it"
     path: /pagopa-wisp-converter(/|$)(.*)
@@ -42,7 +42,7 @@ microservice-chart:
       type: RuntimeDefault
   securityContext:
     allowPrivilegeEscalation: false
-  resources:
+  resources: &resources
     requests:
       memory: "256Mi"
       cpu: "0.15"
@@ -61,7 +61,7 @@ microservice-chart:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
-  envConfig:
+  envConfig: &envConfig
     WEBSITE_SITE_NAME: 'pagopawispconverter' # required to show cloud role name in application insights
     ENV: 'aks-dev'
     APP_LOGGING_LEVEL: 'DEBUG'
@@ -100,7 +100,7 @@ microservice-chart:
     RT_SEND_SCHEDULING_TIME_IN_MINUTES: '1'
     RT_SEND_AVOID_SCHEDULING_ON_STATES: 'PAA_RT_DUPLICATA'
     RPT_TIMER_QUEUE_NAME: "nodo_wisp_rpt_timeout_queue"
-    CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
+    CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'false'
     CRON_JOB_SCHEDULE_RECOVERY_RECEIPT_KO_ENABLED: '0 0 * * * *' # top of every hour of every
     CRON_JOB_SCHEDULE_RECOVERY_FROM_HOURS_AGO: '2' # from 2 hours ago
     CRON_JOB_SCHEDULE_RECOVERY_UNTIL_HOURS_AGO: '1' # until 1 hours ago
@@ -118,7 +118,7 @@ microservice-chart:
     SPRING_PROFILES_ACTIVE: "default,jsonLog"
   secretProvider:
     create: true
-    envSecrets:
+    envSecrets: &envSecret
       # required
       APPLICATIONINSIGHTS_CONNECTION_STRING: 'azure-insight-connection-string'
       SERVICE_BUS_PAYMENT_TIMEOUT_QUEUE_CONNECTION_STRING: 'wisp-payment-timeout-queue-connection-string'
@@ -170,3 +170,37 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+# 1 - wisp converter service
+app:
+  !!merge <<: *microservice-chart
+  ingress:
+    !!merge <<: *ingress
+  resources:
+    !!merge <<: *resources
+  envConfig:
+    !!merge <<: *envConfig
+  envSecret:
+    !!merge <<: *envSecret
+# 2 - wisp converter cron
+cron:
+  !!merge <<: *microservice-chart
+  ingress:
+    !!merge <<: *ingress
+    path: /pagopa-wisp-converter-notused/(.*)
+  resources:
+    !!merge <<: *resources
+    requests:
+      memory: "256Mi"
+      cpu: "0.15"
+    limits:
+      memory: "768Mi"
+      cpu: "0.25"
+    autoscaling:
+      enable: true
+      minReplica: 1
+      maxReplica: 1
+  envConfig:
+    !!merge <<: *envConfig
+    CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
+  envSecret:
+    !!merge <<: *envSecret

@@ -1,4 +1,4 @@
-microservice-chart:
+microservice-chart: &microservice-chart
   namespace: "nodo"
   nameOverride: ""
   fullnameOverride: ""
@@ -27,7 +27,7 @@ microservice-chart:
     type: ClusterIP
     ports:
       - 8080
-  ingress:
+  ingress: &ingress
     create: true
     host: "weuuat.nodo.internal.uat.platform.pagopa.it"
     path: /pagopa-wisp-converter(/|$)(.*)
@@ -42,7 +42,7 @@ microservice-chart:
       type: RuntimeDefault
   securityContext:
     allowPrivilegeEscalation: false
-  resources:
+  resources: &resources
     requests:
       memory: "512Mi"
       cpu: "0.25"
@@ -61,7 +61,7 @@ microservice-chart:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
-  envConfig:
+  envConfig: &envConfig
     WEBSITE_SITE_NAME: 'pagopawispconverter' # required to show cloud role name in application insights
     ENV: 'aks-uat'
     APP_LOGGING_LEVEL: 'INFO'
@@ -118,7 +118,7 @@ microservice-chart:
     SPRING_PROFILES_ACTIVE: "default,jsonLog"
   secretProvider:
     create: true
-    envSecrets:
+    envSecrets: &envSecret
       # required
       APPLICATIONINSIGHTS_CONNECTION_STRING: 'azure-insight-connection-string'
       SERVICE_BUS_PAYMENT_TIMEOUT_QUEUE_CONNECTION_STRING: 'wisp-payment-timeout-queue-connection-string'
@@ -170,3 +170,37 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+# 1 - wisp converter service
+app:
+  !!merge <<: *microservice-chart
+  ingress:
+    !!merge <<: *ingress
+  resources:
+    !!merge <<: *resources
+  envConfig:
+    !!merge <<: *envConfig
+  envSecret:
+    !!merge <<: *envSecret
+# 2 - wisp converter cron
+cron:
+  !!merge <<: *microservice-chart
+  ingress:
+    !!merge <<: *ingress
+    path: /pagopa-wisp-converter-notused/(.*)
+  resources:
+    !!merge <<: *resources
+    requests:
+      memory: "256Mi"
+      cpu: "0.15"
+    limits:
+      memory: "768Mi"
+      cpu: "0.25"
+    autoscaling:
+      enable: true
+      minReplica: 1
+      maxReplica: 1
+  envConfig:
+    !!merge <<: *envConfig
+    CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
+  envSecret:
+    !!merge <<: *envSecret
