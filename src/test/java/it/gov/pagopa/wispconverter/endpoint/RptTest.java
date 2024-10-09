@@ -10,6 +10,7 @@ import it.gov.pagopa.wispconverter.repository.CacheRepository;
 import it.gov.pagopa.wispconverter.repository.RPTRequestRepository;
 import it.gov.pagopa.wispconverter.repository.model.RPTRequestEntity;
 import it.gov.pagopa.wispconverter.service.ConfigCacheService;
+import it.gov.pagopa.wispconverter.service.PaaInviaRTSenderService;
 import it.gov.pagopa.wispconverter.service.ReceiptService;
 import it.gov.pagopa.wispconverter.service.RecoveryService;
 import it.gov.pagopa.wispconverter.service.model.re.ReEventDto;
@@ -79,6 +80,8 @@ class RptTest {
     private ReceiptService receiptService;
     @MockBean
     private RecoveryService recoveryService;
+    @MockBean
+    private PaaInviaRTSenderService paaInviaRTSenderService;
 
     private void setConfigCacheStoredData(String servicePath, int primitiveVersion) {
         StationCreditorInstitutionDto stationCreditorInstitutionDto = new StationCreditorInstitutionDto();

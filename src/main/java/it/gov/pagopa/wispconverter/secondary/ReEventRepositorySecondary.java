@@ -10,15 +10,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Qualifier("secondaryCosmosTemplate")
 public interface ReEventRepositorySecondary extends CosmosRepository<ReEventEntity, String> {
 
     @Query("SELECT * FROM c " +
-                   "WHERE (c.partitionKey >= @dateFrom AND c.partitionKey <= @dateTo) " +
-                   "AND c.iuv = @iuv " +
-                   "AND c.domainId = @organizationId")
+            "WHERE (c.partitionKey >= @dateFrom AND c.partitionKey <= @dateTo) " +
+            "AND c.iuv = @iuv " +
+            "AND c.domainId = @organizationId")
     List<ReEventEntity> findByIuvAndOrganizationId(@Param("dateFrom") String dateFrom,
                                                    @Param("dateTo") String dateTo,
                                                    @Param("iuv") String iuv,
@@ -26,14 +27,22 @@ public interface ReEventRepositorySecondary extends CosmosRepository<ReEventEnti
 
 
     @Query("SELECT * FROM c " +
-                   "WHERE (c.partitionKey >= @dateFrom AND c.partitionKey <= @dateTo) " +
-                   "AND c.sessionId = @sessionId " +
-                   "AND c.status = @status ORDER BY c._ts OFFSET 0 LIMIT @limit")
+            "WHERE (c.partitionKey >= @dateFrom AND c.partitionKey <= @dateTo) " +
+            "AND c.sessionId = @sessionId " +
+            "AND c.status = @status ORDER BY c._ts OFFSET 0 LIMIT @limit")
     List<ReEventEntity> findBySessionIdAndStatus(@Param("dateFrom") String dateFrom,
                                                  @Param("dateTo") String dateTo,
                                                  @Param("sessionId") String sessionId,
                                                  @Param("status") String status,
                                                  @Param("limit") int limit);
+
+    @Query("SELECT * FROM c " +
+            "WHERE c.partitionKey = @date " +
+            "AND c.sessionId = @sessionId " +
+            "AND c.status = @status ORDER BY c._ts")
+    List<ReEventEntity> findBySessionIdAndStatusAndPartitionKey(@Param("date") String partitionKey,
+                                                 @Param("sessionId") String sessionId,
+                                                 @Param("status") String status);
 
 
     @Query(
@@ -53,4 +62,16 @@ public interface ReEventRepositorySecondary extends CosmosRepository<ReEventEnti
                     "WHERE wispSession.occurrences = 1"
     )
     List<SessionIdEntity> findSessionWithoutRedirect(@Param("dateFrom") String dateFrom, @Param("dateTo") String dateTo);
+
+        @Query("SELECT * FROM c " +
+            "WHERE c.partitionKey = @date " +
+            "AND c.eventCategory = 'INTERFACE' AND c.eventSubcategory = 'REQ' " +
+            "AND c.businessProcess = @businessProcess " +
+            "AND c.operationId = @operationId " +
+            "AND c.status = null ORDER BY c._ts OFFSET 0 LIMIT 1")
+    List<ReEventEntity> findFirstInterfaceRequestByPartitionKey(
+            @Param("date") String partitionKey,
+            @Param("businessProcess") String businessProcess,
+            @Param("operationId") String operationId
+    );
 }

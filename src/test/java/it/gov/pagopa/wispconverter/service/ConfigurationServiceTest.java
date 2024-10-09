@@ -28,6 +28,8 @@ class ConfigurationServiceTest {
     ConfigurationRepository configurationRepository;
     @MockBean
     private RecoveryService recoveryService;
+    @MockBean
+    private PaaInviaRTSenderService paaInviaRTSenderService;
 
     @Autowired
     @InjectMocks

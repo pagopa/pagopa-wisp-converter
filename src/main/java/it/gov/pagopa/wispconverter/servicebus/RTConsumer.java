@@ -33,7 +33,7 @@ import java.util.List;
 @Component
 @Slf4j
 public class RTConsumer extends SBConsumer {
-    @Value("${wisp-converter.rt-send.max-retries:48}")
+    @Value("${wisp-converter.rt-send.max-retries:5}")
     private Integer maxRetries;
 
     @Value("${wisp-converter.rt-send.scheduling-time-in-minutes:60}")
@@ -63,9 +63,12 @@ public class RTConsumer extends SBConsumer {
     @Autowired
     private JaxbElementUtil jaxbElementUtil;
 
+    @Value("${disable-service-bus}")
+    private boolean disableServiceBus;
+
     @EventListener(ApplicationReadyEvent.class)
     public void initializeClient() {
-        if (receiverClient != null) {
+        if (receiverClient != null && !disableServiceBus) {
             log.info("[Scheduled] Starting RTConsumer {}", ZonedDateTime.now());
             receiverClient.start();
         }
@@ -73,7 +76,7 @@ public class RTConsumer extends SBConsumer {
 
     @PostConstruct
     public void post() {
-        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-")) {
+        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-") && !disableServiceBus) {
             receiverClient = CommonUtility
                     .getServiceBusProcessorClient(
                             connectionString, queueName, this::processMessage, this::processError
@@ -82,7 +85,6 @@ public class RTConsumer extends SBConsumer {
     }
 
     public void processMessage(ServiceBusReceivedMessageContext context) {
-
         // retrieving content from context of arrived message
         MDCUtil.setSessionDataInfo("resend-rt");
         ServiceBusReceivedMessage message = context.getMessage();

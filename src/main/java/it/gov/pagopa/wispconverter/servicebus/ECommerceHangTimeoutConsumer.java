@@ -44,10 +44,12 @@ public class ECommerceHangTimeoutConsumer extends SBConsumer {
     @Autowired
     private ReceiptService receiptService;
 
+    @Value("${disable-service-bus}")
+    private boolean disableServiceBus;
 
     @PostConstruct
     public void post() {
-        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-")) {
+        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-") && !disableServiceBus) {
             receiverClient = CommonUtility.getServiceBusProcessorClient(connectionString, queueName, this::processMessage, this::processError);
         }
     }
@@ -55,7 +57,7 @@ public class ECommerceHangTimeoutConsumer extends SBConsumer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeClient() {
-        if (receiverClient != null) {
+        if (receiverClient != null && !disableServiceBus) {
             log.info("[Scheduled] Starting ECommerceHangTimeoutConsumer {}", ZonedDateTime.now());
             receiverClient.start();
         }

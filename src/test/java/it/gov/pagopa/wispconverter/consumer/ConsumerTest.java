@@ -103,7 +103,7 @@ class ConsumerTest {
         ReflectionTestUtils.setField(rtConsumer, "reService", reService);
         ReflectionTestUtils.setField(rtConsumer, "idempotencyService", idempotencyService);
         ReflectionTestUtils.setField(rtConsumer, "jaxbElementUtil", jaxbElementUtil);
-        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 48);
+        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 5);
 
         rtConsumer.processMessage(messageContext);
 
@@ -169,7 +169,7 @@ class ConsumerTest {
         ReflectionTestUtils.setField(rtConsumer, "reService", reService);
         ReflectionTestUtils.setField(rtConsumer, "idempotencyService", idempotencyService);
         ReflectionTestUtils.setField(rtConsumer, "jaxbElementUtil", jaxbElementUtil);
-        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 48);
+        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 5);
 
         rtConsumer.processMessage(messageContext);
 
@@ -227,7 +227,7 @@ class ConsumerTest {
         ReflectionTestUtils.setField(rtConsumer, "reService", reService);
         ReflectionTestUtils.setField(rtConsumer, "idempotencyService", idempotencyService);
         ReflectionTestUtils.setField(rtConsumer, "jaxbElementUtil", jaxbElementUtil);
-        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 48);
+        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 5);
 
         rtConsumer.processMessage(messageContext);
 
@@ -262,7 +262,7 @@ class ConsumerTest {
         JaxbElementUtil jaxbElementUtil = new JaxbElementUtil();
 
         RTRetryRepository rtRetryRepository = mock(RTRetryRepository.class);
-        when(rtRetryRepository.findById(any(), any())).thenReturn(Optional.ofNullable(getStoredReceipt(48, receiptType, "http://endpoint:443")));
+        when(rtRetryRepository.findById(any(), any())).thenReturn(Optional.ofNullable(getStoredReceipt(5, receiptType, "http://endpoint:443")));
         RtRetryComosService rtRetryComosService = new RtRetryComosService(reService, rtRetryRepository);
         ReflectionTestUtils.setField(rtRetryComosService, "isTracingOnREEnabled", true);
 
@@ -284,7 +284,7 @@ class ConsumerTest {
         ReflectionTestUtils.setField(rtConsumer, "reService", reService);
         ReflectionTestUtils.setField(rtConsumer, "idempotencyService", idempotencyService);
         ReflectionTestUtils.setField(rtConsumer, "jaxbElementUtil", jaxbElementUtil);
-        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 48);
+        ReflectionTestUtils.setField(rtConsumer, "maxRetries", 5);
 
         rtConsumer.processMessage(messageContext);
 

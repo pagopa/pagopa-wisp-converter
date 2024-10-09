@@ -4,6 +4,7 @@ import com.azure.cosmos.CosmosAsyncClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.wispconverter.controller.RedirectController;
 import it.gov.pagopa.wispconverter.repository.*;
+import it.gov.pagopa.wispconverter.service.PaaInviaRTSenderService;
 import it.gov.pagopa.wispconverter.service.ReceiptService;
 import it.gov.pagopa.wispconverter.service.RecoveryService;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,9 @@ class OpenApiGenerationTest {
 
     @MockBean
     private RecoveryService recoveryService;
+
+    @MockBean
+    private PaaInviaRTSenderService paaInviaRTSenderService;
 
     @Test
     void swaggerSpringPlugin() throws Exception {

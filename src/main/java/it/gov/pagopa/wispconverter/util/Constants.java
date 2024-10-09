@@ -18,6 +18,9 @@ public class Constants {
     public static final String NODO_INVIA_CARRELLO_RPT = "nodoInviaCarrelloRPT";
     public static final String CLOSE_PAYMENT_V2 = "closePaymentV2";
     public static final String SOAP_ENV = "soapenv";
+
+    public static final String PPT = "ppt";
+    public static final String PPT_HEAD = "ppthead";
     public static final BigDecimal AMOUNT_SCALE_INCREMENT = new BigDecimal(100L);
 
     public static final String MDC_INSERTED_TIMESTAMP = "insertTimestamp";

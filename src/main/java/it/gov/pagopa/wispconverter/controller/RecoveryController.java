@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.gov.pagopa.wispconverter.controller.model.RecoveryProxyReceiptRequest;
-import it.gov.pagopa.wispconverter.controller.model.RecoveryProxyReceiptResponse;
+import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptReportResponse;
+import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptRequest;
 import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptResponse;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
@@ -72,7 +72,7 @@ public class RecoveryController {
             log.info("Invoking API operation recoverReceiptKOForCreditorInstitution - args: {} {} {} {}", ci, iuv, dateFrom, dateTo);
 
             RecoveryReceiptResponse recoveryReceiptResponse = recoveryService.recoverReceiptKOByIUV(ci, iuv, dateFrom, dateTo);
-            if(recoveryReceiptResponse != null) {
+            if (recoveryReceiptResponse != null) {
                 return ResponseEntity.ok(recoveryReceiptResponse);
             } else {
                 // RPT with CI and IUV could not be recovered via API
@@ -94,17 +94,17 @@ public class RecoveryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reconciliation completed")
     })
-    @PostMapping(value = "/proxy")
-    public ResponseEntity<RecoveryProxyReceiptResponse> recoverReceiptToBeSentByProxy(@RequestBody RecoveryProxyReceiptRequest request) {
+    @PostMapping(value = "/receipts")
+    public ResponseEntity<RecoveryReceiptReportResponse> recoverReceiptToBeReSent(@RequestBody RecoveryReceiptRequest request) {
         try {
-            log.info("Invoking API operation recoverReceiptToBeSentByProxy - args: {}", request);
-            return ResponseEntity.ok(recoveryService.recoverReceiptToBeSentByProxy(request));
+            log.info("Invoking API operation recoverReceiptToBeReSent - args: {}", request);
+            return ResponseEntity.ok(recoveryService.recoverReceiptToBeReSent(request));
         } catch (Exception ex) {
             String operationId = MDC.get(Constants.MDC_OPERATION_ID);
             log.error(String.format("GenericException: operation-id=[%s]", operationId != null ? operationId : "n/a"), ex);
             AppException appException = new AppException(ex, AppErrorCodeMessageEnum.ERROR, ex.getMessage());
             ErrorResponse errorResponse = errorUtil.forAppException(appException);
-            log.error("Failed API operation recoverReceiptToBeSentByProxy - error: {}", errorResponse);
+            log.error("Failed API operation recoverReceiptToBeReSent - error: {}", errorResponse);
             throw ex;
         }
     }

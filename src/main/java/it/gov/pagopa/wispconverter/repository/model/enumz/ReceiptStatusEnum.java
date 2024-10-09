@@ -5,5 +5,6 @@ public enum ReceiptStatusEnum {
     SENDING,
     SCHEDULED,
     SENT,
-    NOT_SENT
+    NOT_SENT,
+    SENT_REJECTED_BY_EC
 }

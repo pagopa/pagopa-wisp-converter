@@ -65,7 +65,7 @@ public abstract class RTMapper {
     @Mapping(target = "identificativoMessaggioRicevuta", expression = "java(java.util.UUID.randomUUID().toString().replaceAll(\"-\", \"\"))")
     @Mapping(source = "paSendRTV2Request.receipt.paymentDateTime", target = "dataOraMessaggioRicevuta")
     @Mapping(source = "rpt.messageRequestId", target = "riferimentoMessaggioRichiesta")
-    @Mapping(source = "paSendRTV2Request.receipt.applicationDate", target = "riferimentoDataRichiesta")
+    @Mapping(source = "rpt.messageRequestDatetime", target = "riferimentoDataRichiesta")
     public abstract void toCtRicevutaTelematicaPositiva(@MappingTarget CtRicevutaTelematica ctRicevutaTelematica, PaymentRequestDTO rpt, PaSendRTV2Request paSendRTV2Request);
 
     @Mapping(source = "domainId", target = "identificativoDominio")
