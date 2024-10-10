@@ -16,6 +16,7 @@ public class ECommerceHangTimeoutMessage {
 
     private String fiscalCode;
     private String noticeNumber;
+    private String sessionId;
 
     @Override
     public String toString() {

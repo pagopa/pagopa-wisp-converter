@@ -91,10 +91,12 @@ public class ConverterService {
      */
     private void setECommerceHangTimer(SessionDataDTO sessionData) throws URISyntaxException {
         CartRequestDto cart = checkoutService.extractCart(sessionData);
+        String sessionId = sessionData.getCommonFields().getSessionId();
         cart.getPaymentNotices().forEach(elem ->
                 eCommerceHangTimerService.sendMessage(ECommerceHangTimeoutMessage.builder()
                         .fiscalCode(elem.getFiscalCode())
                         .noticeNumber(elem.getNoticeNumber())
+                        .sessionId(sessionId)
                         .build()));
     }
 

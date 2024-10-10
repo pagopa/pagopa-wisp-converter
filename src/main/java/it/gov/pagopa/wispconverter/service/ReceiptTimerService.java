@@ -56,6 +56,7 @@ public class ReceiptTimerService {
         String paymentToken = message.getPaymentToken();
         String fiscalCode = message.getFiscalCode();
         String noticeNumber = message.getNoticeNumber();
+        String sessionId = message.getSessionId();
         MDCUtil.setReceiptTimerInfoInMDC(fiscalCode, noticeNumber, paymentToken);
 
         // Duplicate Prevention Logic
@@ -84,7 +85,7 @@ public class ReceiptTimerService {
         generateRE(InternalStepStatus.RECEIPT_TIMER_GENERATION_CACHED_SEQUENCE_NUMBER, "Cached sequence number: [" + sequenceNumber + "] for payment token: [" + sequenceNumberKey + "]");
 
         // delete ecommerce hang timer: we delete the scheduled message from the queue
-        eCommerceHangTimerService.cancelScheduledMessage(noticeNumber, fiscalCode);
+        eCommerceHangTimerService.cancelScheduledMessage(noticeNumber, fiscalCode, sessionId);
     }
 
     public void cancelScheduledMessage(List<String> paymentTokens) {

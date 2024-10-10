@@ -20,6 +20,7 @@ class ECommerceHangTimerServiceTest {
 
     public static final String NOTICE_NUMBER = "23456789";
     public static final String FISCAL_CODE = "ASDAS1212";
+    public static final String SESSION_ID = "SESSION-ID-ASDAS-1";
     public static final Long SEQUENCE_NUMBER = 1111L;
 
 
@@ -83,7 +84,7 @@ class ECommerceHangTimerServiceTest {
     void cancelScheduledMessage_ok() {
         when(cacheRepository.read(any(), any())).thenReturn(SEQUENCE_NUMBER.toString());
 
-        eCommerceHangTimerService.cancelScheduledMessage(NOTICE_NUMBER, FISCAL_CODE);
+        eCommerceHangTimerService.cancelScheduledMessage(NOTICE_NUMBER, FISCAL_CODE, SESSION_ID);
 
         verify(cacheRepository, times(1)).delete(eq("wisp_timer_hang_" + NOTICE_NUMBER + "_" + FISCAL_CODE));
         verify(serviceBusSenderClient, times(1)).cancelScheduledMessage(SEQUENCE_NUMBER);

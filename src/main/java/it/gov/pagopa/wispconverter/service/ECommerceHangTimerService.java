@@ -31,7 +31,9 @@ import static it.gov.pagopa.wispconverter.util.MDCUtil.setEcommerceHangTimerInfo
 @RequiredArgsConstructor
 public class ECommerceHangTimerService {
 
-    public static final String ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT = "wisp_timer_hang_%s_%s";
+    public static final String ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT = "wisp_timer_hang_%s_%s_%s";
+
+    public static final String OLD_ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT = "wisp_timer_hang_%s_%s";
 
     @Value("${azure.sb.wisp-ecommerce-hang-timeout-queue.connectionString}")
     private String connectionString;
@@ -77,13 +79,14 @@ public class ECommerceHangTimerService {
         if(!disableServiceBus) {
             String noticeNumber = message.getNoticeNumber();
             String fiscalCode = message.getFiscalCode();
+            String sessionId = message.getSessionId();
             setEcommerceHangTimerInfoInMDC(fiscalCode, noticeNumber);
 
-            String key = String.format(ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT, noticeNumber, fiscalCode);
+            String key = String.format(ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT, noticeNumber, fiscalCode, sessionId);
 
             // If the key is already present in the cache, we delete it to avoid duplicated message.
             if (Boolean.TRUE.equals(cacheRepository.hasKey(key))) {
-                cancelScheduledMessage(noticeNumber, fiscalCode);
+                cancelScheduledMessage(noticeNumber, fiscalCode, sessionId);
             }
 
             // build the service bus message
@@ -110,13 +113,19 @@ public class ECommerceHangTimerService {
      * @param noticeNumber use to find the message
      * @param fiscalCode   use to find the message
      */
-    public void cancelScheduledMessage(String noticeNumber, String fiscalCode) {
+    public void cancelScheduledMessage(String noticeNumber, String fiscalCode, String sessionId) {
         if(!disableServiceBus) {
             log.debug("Cancel scheduled message for eCommerce hang release {} {}", sanitizeInput(noticeNumber), sanitizeInput(fiscalCode));
-            String key = String.format(ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT, noticeNumber, fiscalCode);
+            String key = String.format(ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT, noticeNumber, fiscalCode, sessionId);
 
             // get the sequenceNumber from the Redis cache
             String sequenceNumber = cacheRepository.read(key, String.class);
+
+            // for retro-compatibility check old key format wisp_timer_hang_<notice-number>_<fiscal-code>
+            if (sequenceNumber == null) {
+                String oldKey = String.format(OLD_ECOMMERCE_TIMER_MESSAGE_KEY_FORMAT, noticeNumber, fiscalCode);
+                sequenceNumber = cacheRepository.read(oldKey, String.class);
+            }
 
             if (sequenceNumber != null) {
 

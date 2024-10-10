@@ -15,6 +15,8 @@ public class ReceiptTimerRequest {
 
     private String paymentToken;
 
+    private String sessionId;
+
     @Pattern(regexp="\\w*")
     private String fiscalCode;
 

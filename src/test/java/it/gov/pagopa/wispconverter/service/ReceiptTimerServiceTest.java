@@ -67,6 +67,7 @@ public class ReceiptTimerServiceTest {
     public void testSendMessage_newMessage() {
         ReceiptTimerRequest request = new ReceiptTimerRequest();
         request.setPaymentToken("token123");
+        request.setSessionId("sessionId321");
         request.setFiscalCode("fiscalCode");
         request.setNoticeNumber("noticeNumber");
         request.setExpirationTime(1000L);
@@ -74,11 +75,10 @@ public class ReceiptTimerServiceTest {
         when(cacheRepository.read(any(String.class), eq(String.class))).thenReturn(null);
         when(serviceBusSenderClient.scheduleMessage(any(ServiceBusMessage.class), any(OffsetDateTime.class))).thenReturn(123L);
 
-
         receiptTimerService.sendMessage(request);
 
         verify(cacheRepository, times(1)).insert(any(String.class), eq("123"), eq(1000L), eq(ChronoUnit.MILLIS));
-        verify(eCommerceHangTimerService, times(1)).cancelScheduledMessage(eq("noticeNumber"), eq("fiscalCode"));
+        verify(eCommerceHangTimerService, times(1)).cancelScheduledMessage(eq("noticeNumber"), eq("fiscalCode"), eq("sessionId321"));
     }
 
     @Test
