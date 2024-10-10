@@ -131,7 +131,10 @@ public class JaxbElementUtil {
             }
             JAXBContext jaxbContext = JAXBContext.newInstance(c);
             Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+//            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE); // this removes XML declaration
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+            marshaller.setProperty("org.glassfish.jaxb.namespacePrefixMapper", new RTNamespaceMapper());
+            marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, "http://www.digitpa.gov.it/schemas/2011/Pagamenti/ PagInf_RPT_RT_6_0_1.xsd");
             marshaller.marshal(element,stringWriter);
             return stringWriter.toString();
         } catch (JAXBException e) {

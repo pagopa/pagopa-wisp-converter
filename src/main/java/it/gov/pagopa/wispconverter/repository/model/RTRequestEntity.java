@@ -47,4 +47,6 @@ public class RTRequestEntity {
     private Integer retry;
 
     private String idempotencyKey;
+
+    private String station;
 }

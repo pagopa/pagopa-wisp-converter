@@ -18,11 +18,10 @@ import it.gov.pagopa.wispconverter.service.model.ReceiptDto;
 import it.gov.pagopa.wispconverter.util.Constants;
 import it.gov.pagopa.wispconverter.util.ErrorUtil;
 import it.gov.pagopa.wispconverter.util.ReceiptRequestHandler;
-import it.gov.pagopa.wispconverter.util.Trace;
 import it.gov.pagopa.wispconverter.util.ReceiptRequestHandler.PaSendRTV2Request;
+import it.gov.pagopa.wispconverter.util.Trace;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.MediaType;
@@ -35,7 +34,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
@@ -48,9 +46,9 @@ import java.util.List;
 @Slf4j
 public class ReceiptController {
 
-    private static final String BP_RECEIPT_OK = "receipt-ok";
-    private static final String BP_RECEIPT_KO = "receipt-ko";
-    private static final String BP_RECEIPT_RETRIEVE = "receipt-retrieve";
+    public static final String BP_RECEIPT_OK = "receipt-ok";
+    public static final String BP_RECEIPT_KO = "receipt-ko";
+    public static final String BP_RECEIPT_RETRIEVE = "receipt-retrieve";
 
     private final ReceiptService receiptService;
 
@@ -59,9 +57,9 @@ public class ReceiptController {
     private final ObjectMapper mapper;
 
     private final ErrorUtil errorUtil;
-    
+
     private final SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
-    
+
     private final ReceiptRequestHandler receiptRequestHandler;
 
     @Operation(summary = "", description = "", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Receipt"})
@@ -75,7 +73,7 @@ public class ReceiptController {
     public ResponseEntity<String> receiptRetrieve(@QueryParam("ci") String ci, @QueryParam("ccp") String ccp, @QueryParam("iuv") String iuv) {
         try {
             log.info("Invoking API operation receiptRetrieve - args: {}", ci, ccp, iuv);
-            if(rtReceiptCosmosService.receiptRtExist(ci, iuv, ccp))
+            if (rtReceiptCosmosService.receiptRtExist(ci, iuv, ccp))
                 return ResponseEntity.ok("");
             else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
@@ -144,24 +142,24 @@ public class ReceiptController {
             throw ex;
         }
     }
-    
+
     private String getReceiptRequestInfoToLog(String xml) {
-    	String args = "n/a";
-    	try {
-    		if (StringUtils.isNotEmpty(xml)) {
-    			// fix for sonar issue XML external entity in user-controlled data
-    			saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        String args = "n/a";
+        try {
+            if (StringUtils.isNotEmpty(xml)) {
+                // fix for sonar issue XML external entity in user-controlled data
+                saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
                 saxParserFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
                 saxParserFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-                
-    			saxParserFactory.newSAXParser().parse(new InputSource(new StringReader(xml)), receiptRequestHandler);
-    			
-    			PaSendRTV2Request result = receiptRequestHandler.getPaSendRTV2Request();
-    			args = "noticeNumber="+result.getNoticeNumber()+", fiscalCode="+result.getFiscalCode()+", creditorReferenceId="+result.getCreditorReferenceId();
-    		}
-		} catch (SAXException | IOException | ParserConfigurationException e) {
-			return args;
-		}
-    	return args;
+
+                saxParserFactory.newSAXParser().parse(new InputSource(new StringReader(xml)), receiptRequestHandler);
+
+                PaSendRTV2Request result = receiptRequestHandler.getPaSendRTV2Request();
+                args = "noticeNumber=" + result.getNoticeNumber() + ", fiscalCode=" + result.getFiscalCode() + ", creditorReferenceId=" + result.getCreditorReferenceId();
+            }
+        } catch (SAXException | IOException | ParserConfigurationException e) {
+            return args;
+        }
+        return args;
     }
 }

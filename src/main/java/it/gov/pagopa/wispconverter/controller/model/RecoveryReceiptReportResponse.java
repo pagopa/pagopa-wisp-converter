@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter.controller.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
+import org.springframework.data.util.Pair;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RecoveryProxyReceiptRequest {
+public class RecoveryReceiptReportResponse {
 
-    private List<String> receiptIds;
+    private List<Pair<String, String>> receiptStatus;
 }

@@ -35,15 +35,17 @@ public class ConfigCacheService {
             it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi apiInstance = new it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi(configCacheClient);
             if (configData == null) {
                 configData = apiInstance.get(cacheKeys);
+                log.info("loadCache from cache api...done");
             } else {
                 CacheVersionDto id = apiInstance.id();
                 if (!configData.getVersion().equals(id.getVersion())) {
                     configData = apiInstance.get(cacheKeys);
+                    log.info("loadCache from cache api...done");
                 }
             }
 
         } catch (RestClientException e) {
-            throw new AppException(AppErrorCodeMessageEnum.CLIENT_DECOUPLER_CACHING,
+            throw new AppException(AppErrorCodeMessageEnum.CLIENT_APICONFIGCACHE,
                     String.format("RestClientException ERROR [%s] - %s", e.getCause().getClass().getCanonicalName(), e.getMessage()));
         }
     }
