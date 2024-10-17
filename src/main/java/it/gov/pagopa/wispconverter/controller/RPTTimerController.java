@@ -1,5 +1,7 @@
 package it.gov.pagopa.wispconverter.controller;
 
+import static it.gov.pagopa.wispconverter.util.CommonUtility.sanitizeInput;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,8 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
-
-import static it.gov.pagopa.wispconverter.util.CommonUtility.sanitizeInput;
 
 @RestController
 @RequestMapping("/rpt")
@@ -51,9 +51,9 @@ public class RPTTimerController {
     @Trace(businessProcess = RPT_BP_TIMER_SET, reEnabled = true)
     public void createTimer(@RequestBody RPTTimerRequest request) {
         try {
-            log.info("Invoking API operation createRPTTimer - args: {}", sanitizeInput(request.toString()));
+            log.info("Invoking API operation createRPTTimer - args: {}", request.toString());
             rptTimerService.sendMessage(request);
-            log.info("Successful API operation createRPTTimer");
+            log.debug("Successful API operation createRPTTimer");
         } catch (Exception ex) {
             if(!(ex instanceof AppException)) {
                 String operationId = MDC.get(Constants.MDC_OPERATION_ID);
@@ -79,7 +79,7 @@ public class RPTTimerController {
         try {
             log.info("Invoking API operation deleteRPTTimer - args: {}", sanitizeInput(sessionId));
             rptTimerService.cancelScheduledMessage(sessionId);
-            log.info("Successful API operation deleteRPTTimer");
+            log.debug("Successful API operation deleteRPTTimer");
         } catch (Exception ex) {
             String operationId = MDC.get(Constants.MDC_OPERATION_ID);
             log.error(String.format("GenericException: operation-id=[%s]", operationId != null ? operationId : "n/a"), ex);

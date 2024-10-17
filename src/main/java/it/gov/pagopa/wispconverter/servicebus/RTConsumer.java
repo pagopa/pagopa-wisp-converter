@@ -1,15 +1,11 @@
 package it.gov.pagopa.wispconverter.servicebus;
 
-import com.azure.cosmos.models.PartitionKey;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.telematici.pagamenti.ws.nodoperpa.ppthead.IntestazionePPT;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
-import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
 import it.gov.pagopa.wispconverter.repository.model.RTRequestEntity;
-import it.gov.pagopa.wispconverter.repository.model.ReceiptDeadLetterEntity;
 import it.gov.pagopa.wispconverter.repository.model.enumz.IdempotencyStatusEnum;
 import it.gov.pagopa.wispconverter.repository.model.enumz.InternalStepStatus;
 import it.gov.pagopa.wispconverter.repository.model.enumz.ReceiptStatusEnum;
@@ -19,15 +15,20 @@ import it.gov.pagopa.wispconverter.util.*;
 import jakarta.xml.soap.SOAPMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+
+import static it.gov.pagopa.wispconverter.util.SchedulerUtils.updateMDCError;
+import static it.gov.pagopa.wispconverter.util.SchedulerUtils.updateMDCForEndExecution;
+import static it.gov.pagopa.wispconverter.util.SchedulerUtils.updateMDCForStartExecution;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -38,7 +39,7 @@ import java.util.List;
 @Component
 @Slf4j
 public class RTConsumer extends SBConsumer {
-    @Value("${wisp-converter.rt-send.max-retries:5}")
+    @Value("${wisp-converter.rt-send.max-retries:48}")
     private Integer maxRetries;
 
     @Value("${wisp-converter.rt-send.scheduling-time-in-minutes:60}")
@@ -49,8 +50,6 @@ public class RTConsumer extends SBConsumer {
 
     @Value("${azure.sb.paaInviaRT.name}")
     private String queueName;
-
-    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private RtRetryComosService rtRetryComosService;
@@ -68,25 +67,19 @@ public class RTConsumer extends SBConsumer {
     private ServiceBusService serviceBusService;
 
     @Autowired
-    private ReceiptDeadLetterRepository receiptDeadLetterRepository;
-
-    @Autowired
     private JaxbElementUtil jaxbElementUtil;
-
-    @Value("${disable-service-bus-receiver}")
-    private boolean disableServiceBusReceiver;
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeClient() {
-        if (receiverClient != null && !disableServiceBusReceiver) {
-            log.info("[Scheduled] Starting RTConsumer {}", ZonedDateTime.now());
+        if (receiverClient != null) {
+        	updateMDCForStartExecution("initializeClient", "[Scheduled] Starting RTConsumer " + ZonedDateTime.now());
             receiverClient.start();
         }
     }
 
     @PostConstruct
     public void post() {
-        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-") && !disableServiceBusReceiver) {
+        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-")) {
             receiverClient = CommonUtility
                     .getServiceBusProcessorClient(
                             connectionString, queueName, this::processMessage, this::processError
@@ -95,6 +88,7 @@ public class RTConsumer extends SBConsumer {
     }
 
     public void processMessage(ServiceBusReceivedMessageContext context) {
+
         // retrieving content from context of arrived message
         MDCUtil.setSessionDataInfo("resend-rt");
         ServiceBusReceivedMessage message = context.getMessage();
@@ -138,6 +132,7 @@ public class RTConsumer extends SBConsumer {
 
         } catch (Exception e) {
 
+        	updateMDCError(e, "RTConsumer error: Re-scheduled send operation");
             // Generate a new event in RE for store the unsuccessful re-sending of the receipt
             generateREForNotSentRT(e);
 
@@ -151,6 +146,9 @@ public class RTConsumer extends SBConsumer {
                 log.error("AppException: ", e);
             }
         }
+        
+        updateMDCForEndExecution();
+        MDC.clear();
     }
 
     private boolean resendRTToCreditorInstitution(String receiptId, RTRequestEntity receipt, String compositedIdForReceipt, String idempotencyKey) {
@@ -197,24 +195,18 @@ public class RTConsumer extends SBConsumer {
             isSend = true;
 
         } catch (AppException e) {
+        	
+        	updateMDCError(e, e.getError().getTitle());
 
-            if(e.getError().equals(AppErrorCodeMessageEnum.RECEIPT_GENERATION_ERROR_DEAD_LETTER)) {
-                // Sending dead letter in case of unknown status
-                receiptDeadLetterRepository.save(mapper.convertValue(receipt, ReceiptDeadLetterEntity.class));
-                generateREForDeadLetter(receipt);
+            // generate a new event in RE for store the unsuccessful re-sending of the receipt
+            generateREForNotSentRT(e);
 
-                // Remove receipt from receipt collection
-                rtRetryComosService.deleteRTRequestEntity(receipt);
-            }
-            else {
-                // generate a new event in RE for store the unsuccessful re-sending of the receipt
-                generateREForNotSentRT(e);
-
-                // Rescheduled due to errors caused by faulty communication with creditor institution
-                reScheduleReceiptSend(receipt, receiptId, compositedIdForReceipt);
-            }
+            // Rescheduled due to errors caused by faulty communication with creditor institution
+            reScheduleReceiptSend(receipt, receiptId, compositedIdForReceipt);
 
         } catch (IOException e) {
+        	
+        	updateMDCError(e, "RTConsumer error");
 
             rtReceiptCosmosService.updateReceiptStatus(ci, iuv, ccp, ReceiptStatusEnum.NOT_SENT);
 
@@ -257,7 +249,7 @@ public class RTConsumer extends SBConsumer {
                 rtReceiptCosmosService.updateReceiptStatus(ci, iuv, ccp, ReceiptStatusEnum.SCHEDULED);
 
             } catch (Exception e) {
-
+            	updateMDCError(e, "RTConsumer error");
                 // generate a new event in RE for store the unsuccessful scheduling of the RT send
                 generateREForFailedReschedulingSentRT(e);
                 rtReceiptCosmosService.updateReceiptStatus(ci, iuv, ccp, ReceiptStatusEnum.NOT_SENT);
@@ -293,11 +285,6 @@ public class RTConsumer extends SBConsumer {
     private void generateREForMaxRetriesOnReschedulingSentRT(int retries) {
 
         generateRE(InternalStepStatus.RT_SEND_RESCHEDULING_REACHED_MAX_RETRIES, "Reached max retries: [" + retries + "].");
-    }
-
-    private void generateREForDeadLetter(RTRequestEntity rtRequestEntity) {
-
-        generateRE(InternalStepStatus.RT_DEAD_LETTER_SAVED, "Saved dead letter for receipt with iuv: " + rtRequestEntity.getIuv()+ ", domainId: " + rtRequestEntity.getDomainId() + ", ccp: " + rtRequestEntity.getCcp());
     }
 
 }

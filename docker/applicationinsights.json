@@ -1,0 +1,45 @@
+{
+  "selfDiagnostics": {
+    "destination": "console",
+    "level": "INFO"
+  },
+  "sampling": {
+    "percentage": 5,
+    "overrides": [
+      {
+        "telemetryType": "dependency",
+        "percentage": 5
+      },
+      {
+        "telemetryType": "trace",
+        "attributes": [
+          {
+            "key": "message",
+            "value": "Invoking API operation.*",
+            "matchType": "regexp"
+          }
+        ],
+        "percentage": 100
+      },
+      {
+        "telemetryType": "trace",
+        "attributes": [
+          {
+            "key": "message",
+            "value": "^(?!Invoking API operation).*",
+            "matchType": "regexp"
+          }
+        ],
+        "percentage": 5
+      },
+      {
+        "telemetryType": "exception",
+        "percentage": 100
+      },
+      {
+        "telemetryType": "request",
+        "percentage": 100
+      }
+    ]
+  }
+}

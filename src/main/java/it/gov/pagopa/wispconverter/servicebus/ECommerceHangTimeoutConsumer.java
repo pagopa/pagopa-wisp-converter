@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static it.gov.pagopa.wispconverter.util.SchedulerUtils.*;
+
 /**
  * This class is the consumer of the queue 'ecommerce-hang-timeout' of the service bus.
  * When a schedule message trigger this class we'll expire the payment,
@@ -44,12 +46,10 @@ public class ECommerceHangTimeoutConsumer extends SBConsumer {
     @Autowired
     private ReceiptService receiptService;
 
-    @Value("${disable-service-bus-receiver}")
-    private boolean disableServiceBusReceiver;
 
     @PostConstruct
     public void post() {
-        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-") && !disableServiceBusReceiver) {
+        if (StringUtils.isNotBlank(connectionString) && !connectionString.equals("-")) {
             receiverClient = CommonUtility.getServiceBusProcessorClient(connectionString, queueName, this::processMessage, this::processError);
         }
     }
@@ -57,8 +57,8 @@ public class ECommerceHangTimeoutConsumer extends SBConsumer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeClient() {
-        if (receiverClient != null && !disableServiceBusReceiver) {
-            log.info("[Scheduled] Starting ECommerceHangTimeoutConsumer {}", ZonedDateTime.now());
+        if (receiverClient != null) {
+        	updateMDCForStartExecution("initializeClient", "[Scheduled] Starting ECommerceHangTimeoutConsumer "+ ZonedDateTime.now());
             receiverClient.start();
         }
     }
@@ -80,12 +80,12 @@ public class ECommerceHangTimeoutConsumer extends SBConsumer {
             var inputPaaInviaRTKo = List.of(ReceiptDto.builder()
                     .fiscalCode(timeoutMessage.getFiscalCode())
                     .noticeNumber(timeoutMessage.getNoticeNumber())
-                    .sessionId(timeoutMessage.getSessionId())
                     .build());
             receiptService.sendKoPaaInviaRtToCreditorInstitution(inputPaaInviaRTKo);
         } catch (IOException e) {
-            log.error("Error when read ECommerceHangTimeoutDto value from message: '{}'. Body: '{}'", message.getMessageId(), message.getBody());
+        	updateMDCError(e, "Error when read ECommerceHangTimeoutDto value from message: '"+message.getMessageId()+"'. Body: '"+message.getBody()+"'");
         }
+        updateMDCForEndExecution();
         MDC.clear();
     }
 

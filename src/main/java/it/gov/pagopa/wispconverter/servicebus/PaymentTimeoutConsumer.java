@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import static it.gov.pagopa.wispconverter.util.SchedulerUtils.*;
+
 @Slf4j
 @Component
 public class PaymentTimeoutConsumer extends SBConsumer {
@@ -41,7 +43,7 @@ public class PaymentTimeoutConsumer extends SBConsumer {
     @EventListener(ApplicationReadyEvent.class)
     public void initializeClient() {
         if (receiverClient != null && !disableServiceBusReceiver) {
-            log.info("[Scheduled] Starting PaymentTimeoutConsumer {}", ZonedDateTime.now());
+        	updateMDCForStartExecution("initializeClient", "[Scheduled] Starting PaymentTimeoutConsumer " + ZonedDateTime.now());
             receiverClient.start();
         }
     }
@@ -66,9 +68,9 @@ public class PaymentTimeoutConsumer extends SBConsumer {
             String inputPaaInviaRTKo = List.of(receiptDto).toString();
             receiptService.sendKoPaaInviaRtToCreditorInstitution(inputPaaInviaRTKo);
         } catch (IOException e) {
-            log.error("Error when read ReceiptDto value from message: '{}'. Body: '{}'",
-                    message.getMessageId(), message.getBody());
+            updateMDCError(e, "Error when read ReceiptDto value from message: '"+message.getMessageId()+"'. Body: '"+message.getBody()+"'");
         }
+        updateMDCForEndExecution();
         MDC.clear();
     }
 

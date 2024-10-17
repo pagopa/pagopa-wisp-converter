@@ -45,7 +45,8 @@ public class RecoveryController {
     @PostMapping(value = "/{creditor_institution}/receipt-ko")
     public ResponseEntity<RecoveryReceiptResponse> recoverReceiptKOForCreditorInstitution(@PathVariable("creditor_institution") String ci, @QueryParam("date_from") String dateFrom, @QueryParam("date_to") String dateTo) {
         try {
-            log.info("Invoking API operation recoverReceiptKOForCreditorInstitution - args: {} {} {}", ci, dateFrom, dateTo);
+            log.info("Invoking API operation recoverReceiptKOForCreditorInstitution - args: {} {} {}",
+                    sanitizeInput(ci), dateFrom, dateTo);
             RecoveryReceiptResponse response = recoveryService.recoverReceiptKOByCI(ci, dateFrom, dateTo);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
@@ -56,7 +57,7 @@ public class RecoveryController {
             log.error("Failed API operation recoverReceiptKOForCreditorInstitution - error: {}", errorResponse);
             throw ex;
         } finally {
-            log.info("Successful API operation recoverReceiptKOForCreditorInstitution");
+            log.debug("Successful API operation recoverReceiptKOForCreditorInstitution");
         }
     }
 
@@ -72,10 +73,11 @@ public class RecoveryController {
                                                                                                 @Pattern(regexp = "[a-zA-Z0-9_-]{1,10}") @QueryParam("date_from") String dateFrom,
                                                                                                 @Pattern(regexp = "[a-zA-Z0-9_-]{1,10}") @QueryParam("date_to") String dateTo) {
         try {
-            log.info("Invoking API operation recoverReceiptKOForCreditorInstitution - args: {} {} {} {}", ci, iuv, dateFrom, dateTo);
+            log.info("Invoking API operation recoverReceiptKOForCreditorInstitution - args: {} {} {} {}",
+                    sanitizeInput(ci), sanitizeInput(iuv), dateFrom, dateTo);
 
             RecoveryReceiptResponse recoveryReceiptResponse = recoveryService.recoverReceiptKOByIUV(ci, iuv, dateFrom, dateTo);
-            if (recoveryReceiptResponse != null) {
+            if(recoveryReceiptResponse != null) {
                 return ResponseEntity.ok(recoveryReceiptResponse);
             } else {
                 // RPT with CI and IUV could not be recovered via API
@@ -89,7 +91,7 @@ public class RecoveryController {
             log.error("Failed API operation recoverReceiptKOForCreditorInstitution - error: {}", errorResponse);
             throw ex;
         } finally {
-            log.info("Successful API operation recoverReceiptKOForCreditorInstitution");
+            log.debug("Successful API operation recoverReceiptKOForCreditorInstitution");
         }
     }
 
@@ -100,7 +102,7 @@ public class RecoveryController {
     @PostMapping(value = "/receipts")
     public ResponseEntity<RecoveryReceiptReportResponse> recoverReceiptToBeReSent(@RequestBody RecoveryReceiptRequest request) {
         try {
-            log.info("Invoking API operation recoverReceiptToBeReSent - args: {}", sanitizeInput(request.toString()));
+            log.info("Invoking API operation recoverReceiptToBeReSent - args: {}", request.toString());
             return ResponseEntity.ok(recoveryService.recoverReceiptToBeReSent(request));
         } catch (Exception ex) {
             String operationId = MDC.get(Constants.MDC_OPERATION_ID);
@@ -111,7 +113,7 @@ public class RecoveryController {
             throw ex;
         }
     }
-
+    
     @Operation(summary = "Execute reconciliation for passed receipts by partition.", description = "Execute reconciliation of all receipts contained in the partitions of the request", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Recovery"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reconciliation scheduled")
@@ -119,7 +121,7 @@ public class RecoveryController {
     @PostMapping(value = "/partitions")
     public ResponseEntity<RecoveryReceiptReportResponse> recoverReceiptToBeReSentByPartition(@RequestBody RecoveryReceiptByPartitionRequest request) {
         try {
-            log.info("Invoking API operation recoverReceiptToBeReSentByPartition - args: {}", sanitizeInput(request.toString()));
+            log.info("Invoking API operation recoverReceiptToBeReSentByPartition - args: {}", request.toString());
             return ResponseEntity.ok(recoveryService.recoverReceiptToBeReSentByPartition(request));
         } catch (Exception ex) {
             String operationId = MDC.get(Constants.MDC_OPERATION_ID);

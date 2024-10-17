@@ -64,17 +64,11 @@ microservice-chart: &microservice-chart
   envConfig: &envConfig
     WEBSITE_SITE_NAME: 'pagopawispconverter' # required to show cloud role name in application insights
     ENV: 'aks-uat'
-    APP_LOGGING_LEVEL: 'INFO'
+    APP_LOGGING_LEVEL: 'WARN'
     APP_LOGGING_TRACING_LEVEL: 'ERROR'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    OTEL_SERVICE_NAME: "pagopa-wisp-converter"
-    OTEL_RESOURCE_ATTRIBUTES: "service.environment=uat"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
-    OTEL_TRACES_EXPORTER: otlp
-    OTEL_METRICS_EXPORTER: otlp
-    OTEL_LOGS_EXPORTER: none
-    OTEL_TRACES_SAMPLER: "always_on"
+    SERVICE_NAME: "pagopa-wisp-converter"
     REDIS_PORT: "6380"
     COSMOS_URI: "https://pagopa-u-weu-nodo-wispconv-cosmos-account.documents.azure.com:443/"
     COSMOS_READ_REGION: "West Europe"
@@ -125,7 +119,6 @@ microservice-chart: &microservice-chart
       SERVICE_BUS_PAAINVIART_QUEUE_CONNECTION_STRING: 'wisp-paainviart-queue-connection-string'
       ECOMMERCE_HANG_TIMER_QUEUE_CONNECTION_STRING: 'ecommerce-hang-timer-queue-connection-string'
       RPT_TIMER_QUEUE_CONNECTION_STRING: 'wisp-rpt-timeout-queue-connection-string'
-      OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
       REDIS_PASSWORD: 'redis-primary-key'
       REDIS_HOST: 'redis-hostname'
       COSMOS_KEY: 'cosmosdb-wisp-converter-account-key'

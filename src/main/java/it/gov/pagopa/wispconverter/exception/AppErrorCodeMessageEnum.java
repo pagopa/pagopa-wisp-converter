@@ -63,7 +63,8 @@ public enum AppErrorCodeMessageEnum {
     CLIENT_CHECKOUT(3004, "Checkout error", "Error while communicating with Checkout service. {0}", HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while communicating with Checkout backend internal service in order to send a request about the cart creation. It can be related to any client problem, so the best way to handle this is to use the Technical Support's APIs in order to find the cause."),
     CLIENT_PAAINVIART(3005, "PaaInviaRT error", "Error while communicating with Station for paaInviaRT service. {0}", HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while communicating with the creditor institution's station (external service) in order to sending of a paaInviaRT request. It can be related to any client problem, so the best way to handle this is to use the Technical Support's APIs in order to find the cause."),
     CLIENT_CARTSESSION_CACHING(3006, "Cart caching client error", "Error while communicating with cart caching API. {0}", HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while communicating with an internal service endpoint dedicated to storing internal cache for handle unique session on cart. It can be related to any client problem, so the best way to handle this is to use the Technical Support's APIs in order to find the cause."),
-    ;
+    
+    UNKNOWN (null, null, null, null, null);
 
     private final Integer code;
     private final String title;
