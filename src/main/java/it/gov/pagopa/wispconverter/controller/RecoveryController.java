@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptByPartitionRequest;
+import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptBySessionIdRequest;
 import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptReportResponse;
 import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptRequest;
 import it.gov.pagopa.wispconverter.controller.model.RecoveryReceiptResponse;
@@ -127,6 +128,25 @@ public class RecoveryController {
             AppException appException = new AppException(ex, AppErrorCodeMessageEnum.ERROR, ex.getMessage());
             ErrorResponse errorResponse = errorUtil.forAppException(appException);
             log.error("Failed API operation recoverReceiptToBeReSentByPartition - error: {}", errorResponse);
+            throw ex;
+        }
+    }
+
+    @Operation(summary = "Execute reconciliation for OK receipts by sessionId.", description = "Execute reconciliation of all receipts related to the sessionIds of the request", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Recovery"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reconciliation scheduled")
+    })
+    @PostMapping(value = "/sessionIds/ok")
+    public ResponseEntity<RecoveryReceiptReportResponse> recoverReceiptToBeReSentBySessionId(@RequestBody RecoveryReceiptBySessionIdRequest request) {
+        try {
+            log.debug("Invoking API operation recoverReceiptToBeReSentBySessionId - args: {}", sanitizeInput(request.toString()));
+            return ResponseEntity.ok(recoveryService.recoverReceiptOkToBeReSentBySessionIds(request));
+        } catch (Exception ex) {
+            String operationId = MDC.get(Constants.MDC_OPERATION_ID);
+            log.error(String.format("GenericException: operation-id=[%s]", operationId != null ? operationId : "n/a"), ex);
+            AppException appException = new AppException(ex, AppErrorCodeMessageEnum.ERROR, ex.getMessage());
+            ErrorResponse errorResponse = errorUtil.forAppException(appException);
+            log.error("Failed API operation recoverReceiptToBeReSentBySessionId - error: {}", errorResponse);
             throw ex;
         }
     }

@@ -44,6 +44,11 @@ public interface ReEventRepositorySecondary extends CosmosRepository<ReEventEnti
                                                  @Param("sessionId") String sessionId,
                                                  @Param("status") String status);
 
+    @Query("SELECT * FROM c " +
+            "WHERE c.sessionId = @sessionId " +
+            "AND c.component = 'WISP_SOAP_CONVERTER' " +
+            "AND c.status = 'RPT_ACCETTATA_NODO' ORDER BY c._ts")
+    List<ReEventEntity> findRptAccettataNodoBySessionId(@Param("sessionId") String sessionId);
 
     @Query(
             "SELECT wispSession.sessionId " +

@@ -13,9 +13,11 @@ import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.repository.RPTRequestRepository;
 import it.gov.pagopa.wispconverter.repository.RTRetryRepository;
 import it.gov.pagopa.wispconverter.repository.model.*;
+import it.gov.pagopa.wispconverter.repository.model.enumz.IdempotencyStatusEnum;
 import it.gov.pagopa.wispconverter.repository.model.enumz.InternalStepStatus;
 import it.gov.pagopa.wispconverter.repository.model.enumz.ReceiptStatusEnum;
 import it.gov.pagopa.wispconverter.repository.model.enumz.ReceiptTypeEnum;
+import it.gov.pagopa.wispconverter.secondary.IdempotencyKeyRepositorySecondary;
 import it.gov.pagopa.wispconverter.secondary.RTRepositorySecondary;
 import it.gov.pagopa.wispconverter.secondary.ReEventRepositorySecondary;
 import it.gov.pagopa.wispconverter.service.model.re.ReEventDto;
@@ -31,6 +33,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -43,6 +46,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -73,6 +77,8 @@ public class RecoveryService {
     private final RTRepositorySecondary rtRepository;
 
     private final ReEventRepositorySecondary reEventRepository;
+
+    private final IdempotencyKeyRepositorySecondary idempotencyKeyRepositorySecondary;
 
     private final ReceiptService receiptService;
 
@@ -250,6 +256,63 @@ public class RecoveryService {
         reService.addRe(reEvent);
     }
 
+    @Transactional
+    public RecoveryReceiptReportResponse recoverReceiptOkToBeReSentBySessionIds(RecoveryReceiptBySessionIdRequest request) {
+        List<String> receiptsIds = new ArrayList<>();
+        try {
+            for (String sessionId : request.getSessionIds()) {
+                // extract rpt from re
+                List<ReEventEntity> reItems = reEventRepository.findRptAccettataNodoBySessionId(sessionId);
+                for(ReEventEntity reItem : reItems) {
+                    String[] brokerEC = reItem.getStation().split("_");
+                    String receiptId = brokerEC[0] + "_" + UUID.randomUUID();
+                    IdempotencyKeyEntity idempotencyKey = IdempotencyKeyEntity.builder()
+                            .id(String.format("%s_%s_%s", reItem.getSessionId(), reItem.getIuv(), reItem.getDomainId()))
+                            .partitionKey(reItem.getPartitionKey())
+                            .receiptType(ReceiptTypeEnum.OK)
+                            .sessionId(reItem.getSessionId())
+                            .status(IdempotencyStatusEnum.FAILED)
+                            .build();
+                    idempotencyKeyRepositorySecondary.save(idempotencyKey);
+                    String payload = "<soapenv:Envelope\n" +
+                            "\txmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
+                            "\txmlns:ns2=\"http://ws.pagamenti.telematici.gov/ppthead\"\n" +
+                            "\txmlns:ns3=\"http://ws.pagamenti.telematici.gov/\"><soapenv:Header><ns2:intestazionePPT\n" +
+                            "\t\t\txmlns:ns4=\"http://schemas.xmlsoap.org/soap/envelope/\"><identificativoIntermediarioPA></identificativoIntermediarioPA><identificativoStazioneIntermediarioPA></identificativoStazioneIntermediarioPA><identificativoDominio>DOMINIO</identificativoDominio><identificativoUnivocoVersamento>IUV</identificativoUnivocoVersamento><codiceContestoPagamento></codiceContestoPagamento></ns2:intestazionePPT></soapenv:Header><soapenv:Body><ns3:paaInviaRT><tipoFirma/><rt></rt></ns3:paaInviaRT></soapenv:Body></soapenv:Envelope>"
+                                    .replace("DOMINIO", reItem.getDomainId())
+                                    .replace("IUV", reItem.getIuv());
+
+                    // create a RTRequestEntity to generate the ok receipt
+                    RTRequestEntity receipt = RTRequestEntity.builder()
+                            .id(receiptId)
+                            .partitionKey(reItem.getPartitionKey())
+                            .domainId(reItem.getDomainId())
+                            .idempotencyKey(idempotencyKey.getId())
+                            .iuv(reItem.getIuv())
+                            .ccp(reItem.getCcp())
+                            .sessionId(sessionId)
+                            .payload(AppBase64Util.base64Encode(ZipUtil.zip(payload)))
+                            .primitive(reItem.getPrimitive())
+                            .receiptType(ReceiptTypeEnum.OK)
+                            .station(reItem.getStation())
+                            .build();
+                    rtRetryRepository.save(receipt);
+                    receiptsIds.add(receiptId);
+                }
+            }
+
+
+            RecoveryReceiptRequest req = RecoveryReceiptRequest.builder()
+                    .receiptIds(receiptsIds)
+                    .build();
+
+            return recoverReceiptToBeReSent(req);
+        }
+        catch (IOException e) {
+            throw new AppException(AppErrorCodeMessageEnum.ERROR, "Problem with receipt payload");
+        }
+    }
+
     public RecoveryReceiptReportResponse recoverReceiptToBeReSentByPartition(RecoveryReceiptByPartitionRequest request) {
 
         List<String> receiptsIds = request.getPartitionKeys().stream()
@@ -348,11 +411,12 @@ public class RecoveryService {
                     rtRequestEntity.setId(overriddenReceiptId);
                     rtRequestEntity.setDomainId(domainId);
                     rtRequestEntity.setIdempotencyKey(overriddenIdempotencyKey);
+                    rtRequestEntity.setSessionId(sessionId);
                     rtRequestEntity.setRetry(0);
                     rtRequestEntity.setPayload(AppBase64Util.base64Encode(ZipUtil.zip(payload)));
                     rtRetryRepository.save(rtRequestEntity);
 
-                    String compositedIdForReceipt = String.format("%s_%s", rtRequestEntity.getPartitionKey(), rtRequestEntity.getId());
+                    String compositedIdForReceipt = String.format("%s_%s", rtRequestEntity.getPartitionKey(), overriddenReceiptId);
                     serviceBusService.sendMessage(compositedIdForReceipt, null);
                     generateRE(null, "Success", InternalStepStatus.RT_SEND_RESCHEDULING_SUCCESS,
                             null, null, null, sessionId, String.format("Generated receipt: %s", overriddenReceiptId));
