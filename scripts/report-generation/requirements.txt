@@ -1,0 +1,4 @@
+azure-cosmos==4.7.0
+requests==2.32.3
+slack-sdk==3.33.1
+azure-kusto-data==4.6.1

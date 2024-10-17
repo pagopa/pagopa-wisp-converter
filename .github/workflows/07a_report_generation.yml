@@ -1,10 +1,14 @@
-name: Generate report
+name: Generate and send report
 
 on:
-  #schedule:
-    #- cron: '00 05 * * *' # generate last day report
-    #- cron: '00 10 * * 1' # generate last week report on monday
-    #- cron: '00 10 1 * *' # generate last month report on first day of the month
+  schedule:
+    - cron: '00 05 * * *' # (05:00AM) generate last day report 
+    - cron: '00 09 * * 1' # (09:00AM) generate last week report on monday
+    - cron: '00 09 1 * *' # (09:00AM) generate last month report on first day of the month
+    #
+    - cron: '00 07 * * *' # (07:00AM) send last day report
+    - cron: '30 09 * * 1' # (09:30AM) send last week report on monday
+    - cron: '35 09 1 * *' # (09:35AM) send last month report on first day of the month
 
   workflow_dispatch:
     inputs:
@@ -23,12 +27,12 @@ on:
         options:
           - daily
           - weekly
-          - weekly
+          - monthly
         default: daily
       report_date:
         required: false
         type: string
-        description: Define the specific date (in format yyyy-MM-dd)
+        description: Define a specific date in yyyy-MM-dd
 
 
 permissions:
@@ -38,28 +42,84 @@ permissions:
 
 
 jobs:
-  report_generation:
-    name: Generate and persist report
-    runs-on: ubuntu-latest
+  create_runner:
+    name: Create Runner
+    runs-on: ubuntu-22.04
+    environment: 
+      name: ${{(github.event.inputs == null && 'prod') || inputs.environment }}
+    outputs:
+      runner_name: ${{ steps.create_github_runner.outputs.runner_name }}
     steps:
 
-      - name: Generating daily report
+      - name: Create GitHub Runner
+        id: create_github_runner
+        # from https://github.com/pagopa/eng-github-actions-iac-template/tree/main/azure/github-self-hosted-runner-azure-create-action
+        uses: pagopa/eng-github-actions-iac-template/azure/github-self-hosted-runner-azure-create-action@main
+        with:
+          client_id: ${{ secrets.CD_CLIENT_ID }}
+          tenant_id: ${{ secrets.TENANT_ID }}
+          subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
+          container_app_environment_name: ${{ vars.CONTAINER_APP_ENVIRONMENT_NAME }}
+          resource_group_name: ${{ vars.CONTAINER_APP_ENVIRONMENT_RESOURCE_GROUP_NAME }} # RG of the runner
+          pat_token: ${{ secrets.BOT_TOKEN_GITHUB }}
+          self_hosted_runner_image_tag: "latest"
+
+
+  report_generation:
+    needs: [ create_runner ]
+    name: Generate and/or send report
+    runs-on: [ self-hosted, "${{ needs.create_runner.outputs.runner_name }}" ]
+    environment: 
+      name: ${{(github.event.inputs == null && 'prod') || inputs.environment }}
+    steps:
+
+      - name: Generating daily report via scheduling
         if: github.event.schedule == '00 05 * * *'
         run: |
           echo "Generating a daily report"          
           echo "report_type=daily" >> $GITHUB_ENV
+          echo "operation=generate" >> $GITHUB_ENV
 
-      - name: Generating weekly report
+      - name: Generating weekly report via scheduling
         if: github.event.schedule == '00 10 * * 1'
         run: |
           echo "Generating a weekly report"
           echo "report_type=weekly" >> $GITHUB_ENV
+          echo "operation=generate" >> $GITHUB_ENV
 
-      - name: Generating monthly report
+      - name: Generating monthly report via scheduling
         if: github.event.schedule == '00 10 1 * *'
         run: |
           echo "Generating a monthly report"          
           echo "report_type=monthly" >> $GITHUB_ENV
+          echo "operation=generate" >> $GITHUB_ENV
+
+      - name: Sending daily report via scheduling
+        if: github.event.schedule == '00 07 * * *'
+        run: |
+          echo "Generating a daily report"          
+          echo "report_type=daily" >> $GITHUB_ENV
+          echo "operation=send" >> $GITHUB_ENV
+
+      - name: Sending weekly report via scheduling
+        if: github.event.schedule == '30 09 * * 1'
+        run: |
+          echo "Generating a weekly report"
+          echo "report_type=weekly" >> $GITHUB_ENV
+          echo "operation=send" >> $GITHUB_ENV
+
+      - name: Sending monthly report via scheduling
+        if: github.event.schedule == '35 09 1 * *'
+        run: |
+          echo "Sending a monthly report"          
+          echo "report_type=monthly" >> $GITHUB_ENV
+          echo "operation=send" >> $GITHUB_ENV
+
+      - name: Generating and sending report via manual trigger
+        if: github.event_name != 'schedule'
+        run: |
+          echo "Generating and sending a report via manual trigger"
+          echo "operation=both" >> $GITHUB_ENV
 
       - name: Generate variables
         id: generate_vars
@@ -77,7 +137,7 @@ jobs:
         # from https://github.com/Azure/login/commits/master
         uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2
         with:
-          client-id: ${{ secrets.CI_CLIENT_ID }}
+          client-id: ${{ secrets.CD_CLIENT_ID }}
           tenant-id: ${{ secrets.TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
@@ -92,6 +152,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Generate report
+        if: ${{ env.operation == 'both' || env.operation == 'generate' }}
         run: |
           cd ./scripts/report-generation
           export REPORT_ENV="${{ env.environment }}" \
@@ -107,3 +168,42 @@ jobs:
             REPORT_DATABASE_REGION="${{ vars.REPORT_DATABASE_REGION }}" \
             REPORT_APICONFIG_CACHE_SUBKEY="${{ secrets.REPORT_APICONFIG_CACHE_SUBKEY }}"
           python run_extraction.py  
+
+      - name: Send report
+        if: ${{ env.operation == 'both' || env.operation == 'send' }}
+        run: |
+          cd ./scripts/report-generation
+          export REPORT_ENV="${{ env.environment }}" \
+            REPORT_TYPE="${{ env.report_type }}" \
+            REPORT_DATE="${{ env.report_date }}" \
+            REPORT_SLACK_WEBHOOK_URL="${{ secrets.REPORT_SLACK_WEBHOOK_URL }}" \
+            REPORT_DATAEXPLORER_URL="${{ vars.REPORT_DATAEXPLORER_URL }}" \
+            REPORT_DATAEXPLORER_CLIENT_ID="${{ secrets.REPORT_DATAEXPLORER_CLIENT_ID }}" \
+            REPORT_DATAEXPLORER_CLIENT_SECRET="${{ secrets.REPORT_DATAEXPLORER_CLIENT_SECRET }}" \
+            REPORT_DATAEXPLORER_TENANT_ID="${{ secrets.TENANT_ID }}" \
+            REPORT_DATABASE_URL="${{ vars.REPORT_DATABASE_URL }}" \
+            REPORT_DATABASE_KEY="${{ secrets.REPORT_DATABASE_KEY }}" \
+            REPORT_DATABASE_REGION="${{ vars.REPORT_DATABASE_REGION }}" \
+            REPORT_APICONFIG_CACHE_SUBKEY="${{ secrets.REPORT_APICONFIG_CACHE_SUBKEY }}"
+          python run_send.py 
+
+  cleanup_runner:
+    name: Cleanup Runner
+    needs: [ create_runner, report_generation ]
+    if: ${{ success() || failure() && inputs.target == inputs.environment || inputs.target == 'all' }}
+    runs-on: ubuntu-22.04
+    environment: 
+      name: ${{(github.event.inputs == null && 'prod') || inputs.environment }}
+    steps:
+
+      - name: Cleanup GitHub Runner
+        id: cleanup_github_runner
+        # from https://github.com/pagopa/eng-github-actions-iac-template/tree/main/azure/github-self-hosted-runner-azure-cleanup-action
+        uses: pagopa/eng-github-actions-iac-template/azure/github-self-hosted-runner-azure-cleanup-action@0ee2f58fd46d10ac7f00bce4304b98db3dbdbe9a
+        with:
+          client_id: ${{ secrets.CD_CLIENT_ID }}
+          tenant_id: ${{ secrets.TENANT_ID }}
+          subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
+          resource_group_name: ${{ vars.CONTAINER_APP_ENVIRONMENT_RESOURCE_GROUP_NAME }}
+          runner_name: ${{ needs.create_runner.outputs.runner_name }}
+          pat_token: ${{ secrets.BOT_TOKEN_GITHUB }}

@@ -26,6 +26,12 @@ locals {
     name           = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-cae",
     resource_group = "${local.prefix}-${var.env_short}-${local.location_short}-github-runner-rg",
   }
+
+  report_generation = {
+    dataexplorer_url  = "https://${local.prefix}${var.env_short}dataexplorer.westeurope.kusto.windows.net/"
+    database_url      = "https://${local.prefix}-${var.env_short}-${local.location_short}-nodo-wispconv-cosmos-account.documents.azure.com:443/"
+    database_region   = var.env_short == "p" ? "North Europe" : "West Europe"
+  }
 }
 
 variable "env" {

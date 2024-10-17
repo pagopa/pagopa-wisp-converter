@@ -105,12 +105,38 @@ data "azurerm_key_vault_secret" "integration_test_station_wisp_password" {
   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
 
+data "azurerm_key_vault_secret" "report_generation_slack_webhook_url" {
+  name         = "report-generation-wisp-slack-webhook-url"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "report_generation_dataexplorer_clientid" {
+  name         = "dataexplorer-client-id"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "report_generation_dataexplorer_clientsecret" {
+  name         = "dataexplorer-client-secret"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "report_generation_database_key" {
+  name         = "cosmosdb-wisp-converter-account-key"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
+data "azurerm_key_vault_secret" "report_generation_apiconfigcache_subkey" {
+  name         = "api-config-cache-subscription-key-string"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
+
 data "azurerm_user_assigned_identity" "identity_cd" {
   name                = "${local.product}-${local.domain}-01-github-cd-identity"
   resource_group_name = "${local.product}-identity-rg"
 }
 
 data "azurerm_user_assigned_identity" "identity_ci" {
+  count               = var.env_short == "p" ? 0 : 1
   name                = "${local.product}-${local.domain}-01-github-ci-identity"
   resource_group_name = "${local.product}-identity-rg"
 }
