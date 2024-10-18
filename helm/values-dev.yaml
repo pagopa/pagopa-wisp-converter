@@ -4,7 +4,7 @@ microservice-chart: &microservice-chart
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
-    tag: "0.4.14"
+    tag: "0.4.14-1-disable-cron-autoscaling"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -196,7 +196,7 @@ cron:
       memory: "768Mi"
       cpu: "0.25"
     autoscaling:
-      enable: true
+      enable: false
       minReplica: 1
       maxReplica: 1
   envConfig:

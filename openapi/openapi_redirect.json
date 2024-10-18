@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "WISP-Converter-redirect",
-    "version": "0.4.14"
+    "version": "0.4.14-1-disable-cron-autoscaling"
   },
   "servers": [
     {
