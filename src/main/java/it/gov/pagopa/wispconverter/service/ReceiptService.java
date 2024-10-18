@@ -325,7 +325,6 @@ public class ReceiptService {
         } catch (AppException e) {
 
             throw e;
-
         } catch (Exception e) {
 
             throw new AppException(AppErrorCodeMessageEnum.RECEIPT_OK_NOT_SENT, e);
@@ -466,6 +465,8 @@ public class ReceiptService {
             } catch (AppException e) {
                 log.error("AppException: ", e);
             }
+        } else {
+            rtReceiptCosmosService.updateReceiptStatus(rpt, ReceiptStatusEnum.SENT);
         }
 
         return isSuccessful;
