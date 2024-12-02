@@ -4,7 +4,7 @@
     "title" : "API-Config Cache ${service}",
     "description" : "Generate cache for various microservices",
     "termsOfService" : "https://www.pagopa.gov.it/",
-    "version" : "0.8.20"
+    "version" : "0.9.20-7-PAGOPA-2362-schema-v1"
   },
   "servers" : [ {
     "url" : "https://{host}/{basePath}",
@@ -14,29 +14,38 @@
         "enum" : [ "api.dev.platform.pagopa.it", "api.uat.platform.pagopa.it", "api.platform.pagopa.it" ]
       },
       "basePath" : {
-        "default" : "api-config-cache/o/v1",
-        "enum" : [ "api-config-cache/o/v1", "api-config-cache/p/v1", "api-config-cache/odev/v1" ]
+        "default" : "api-config-cache/p/v1",
+        "enum" : [ "api-config-cache/p/v1" ]
       }
     }
   } ],
   "paths" : {
-    "/cache" : {
+    "/stakeholders/wisp/cache/schemas/v1" : {
       "get" : {
         "tags" : [ "Cache" ],
-        "summary" : "Get in memory cache,full or only the supplied keys",
-        "operationId" : "get",
+        "summary" : "Get selected key of {stakeholder} cache v1 config",
+        "operationId" : "cache",
         "parameters" : [ {
-          "name" : "keys",
+          "name" : "refresh",
           "in" : "query",
+          "description" : "to force the refresh of the cache",
           "required" : false,
+          "deprecated" : true,
           "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
+            "type" : "boolean"
           }
         } ],
         "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConfigDataV1"
+                }
+              }
+            }
+          },
           "400" : {
             "description" : "Bad Request",
             "content" : {
@@ -57,24 +66,14 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ConfigDataV1"
-                }
-              }
-            }
-          },
           "401" : {
             "description" : "Unauthorized"
           },
-          "429" : {
-            "description" : "Too many requests"
-          },
           "403" : {
             "description" : "Forbidden"
+          },
+          "429" : {
+            "description" : "Too many requests"
           }
         },
         "security" : [ {
@@ -82,10 +81,10 @@
         } ]
       }
     },
-    "/cache/xlsx" : {
+    "/stakeholders/wisp/cache/schemas/v1/xlsx" : {
       "get" : {
         "tags" : [ "Cache" ],
-        "summary" : "Get xlsx of full chache",
+        "summary" : "Get xlsx of last v1 {stakeholder} cache version",
         "operationId" : "xls",
         "responses" : {
           "400" : {
@@ -117,11 +116,11 @@
           "401" : {
             "description" : "Unauthorized"
           },
-          "429" : {
-            "description" : "Too many requests"
-          },
           "403" : {
             "description" : "Forbidden"
+          },
+          "429" : {
+            "description" : "Too many requests"
           }
         },
         "security" : [ {
@@ -129,99 +128,11 @@
         } ]
       }
     },
-    "/cache/refresh" : {
+    "/stakeholders/wisp/cache/schemas/v1/id" : {
       "get" : {
         "tags" : [ "Cache" ],
-        "summary" : "Refresh in memory full chache",
-        "operationId" : "refresh",
-        "responses" : {
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Service unavailable",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized"
-          },
-          "429" : {
-            "description" : "Too many requests"
-          },
-          "403" : {
-            "description" : "Forbidden"
-          }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        } ]
-      }
-    },
-    "/cache/keys" : {
-      "get" : {
-        "tags" : [ "Cache" ],
-        "summary" : "Get the list of available cache keys",
-        "operationId" : "getKeys",
-        "responses" : {
-          "500" : {
-            "description" : "Service unavailable",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized"
-          },
-          "429" : {
-            "description" : "Too many requests"
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden"
-          }
-        },
-        "security" : [ {
-          "ApiKey" : [ ]
-        } ]
-      }
-    },
-    "/cache/id" : {
-      "get" : {
-        "tags" : [ "Cache" ],
-        "summary" : "Get in memory full cache id",
-        "operationId" : "id",
+        "summary" : "Get last v1 {stakeholder} cache version",
+        "operationId" : "idV1",
         "responses" : {
           "400" : {
             "description" : "Bad Request",
@@ -256,11 +167,14 @@
           "401" : {
             "description" : "Unauthorized"
           },
-          "429" : {
-            "description" : "Too many requests"
+          "404" : {
+            "description" : "Not Found"
           },
           "403" : {
             "description" : "Forbidden"
+          },
+          "429" : {
+            "description" : "Too many requests"
           }
         },
         "security" : [ {
@@ -271,28 +185,6 @@
   },
   "components" : {
     "schemas" : {
-      "ProblemJson" : {
-        "type" : "object",
-        "properties" : {
-          "title" : {
-            "type" : "string",
-            "description" : "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
-          },
-          "status" : {
-            "maximum" : 600,
-            "minimum" : 100,
-            "type" : "integer",
-            "description" : "The HTTP status code generated by the origin server for this occurrence of the problem.",
-            "format" : "int32",
-            "example" : 200
-          },
-          "detail" : {
-            "type" : "string",
-            "description" : "A human readable explanation specific to this occurrence of the problem.",
-            "example" : "There was an error processing the request"
-          }
-        }
-      },
       "BrokerCreditorInstitution" : {
         "required" : [ "broker_code", "enabled", "extended_fault_bean" ],
         "type" : "object",
@@ -474,6 +366,9 @@
             "format" : "int32"
           },
           "flag_travaso" : {
+            "type" : "boolean"
+          },
+          "flag_standin" : {
             "type" : "boolean"
           }
         }
@@ -1080,6 +975,9 @@
           "primitive_version" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "flag_standin" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1135,6 +1033,28 @@
           "timeout_c" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "ProblemJson" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string",
+            "description" : "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
+          },
+          "status" : {
+            "maximum" : 600,
+            "minimum" : 100,
+            "type" : "integer",
+            "description" : "The HTTP status code generated by the origin server for this occurrence of the problem.",
+            "format" : "int32",
+            "example" : 200
+          },
+          "detail" : {
+            "type" : "string",
+            "description" : "A human readable explanation specific to this occurrence of the problem.",
+            "example" : "There was an error processing the request"
           }
         }
       },
