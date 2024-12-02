@@ -78,6 +78,44 @@ public class RtReceiptCosmosService {
         }
     }
 
+    @Transactional
+    public boolean updateReceiptStatus(RTEntity rtEntity, ReceiptStatusEnum status) {
+        try {
+            rtEntity.setReceiptStatus(status);
+            rtRepository.save(rtEntity);
+
+            return true;
+        } catch (CosmosException e) {
+            log.error("An exception occurred while saveRTEntity: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateStatusToPaying(RPTContentDTO rptContentDTO) {
+        String fiscalCode = rptContentDTO.getRpt().getDomain().getDomainId();
+        Optional<RTEntity> rtEntityOpt = this.findById(fiscalCode, rptContentDTO.getIuv(), rptContentDTO.getCcp());
+        if(rtEntityOpt.isPresent()) {
+            RTEntity rtEntity = rtEntityOpt.get();
+            // change status only if is REDIRECT, if it is equals or next to PAYING (ie PAYING, SENDING, SENT)
+            // must not go back or overwritten with the same value
+            if(rtEntity.getReceiptStatus().equals(ReceiptStatusEnum.REDIRECT)) {
+                this.updateReceiptStatus(rtEntity, ReceiptStatusEnum.PAYING);
+                log.debug("Receipt-rt with id = {} has been updated with status PAYING", rtEntity.getId());
+                return true;
+            }
+            log.warn("Attempt to update receipt-rt with id = {} has been failed because is the status is {}",
+                    rtEntity.getId(), rtEntity.getReceiptStatus());
+        }
+
+        return false;
+    }
+
+    public Optional<RTEntity> findById(String domainId, String iuv, String ccp) {
+        String id = String.format("%s_%s_%s", domainId, iuv, ccp);
+        // Remove illegal characters ['/', '\', '#'] because cannot be used in Resource ID
+        return rtRepository.findById(id, new PartitionKey(id));
+    }
+
     public boolean receiptRtExist(String domainId, String iuv, String ccp) {
         String id = getId(domainId, iuv, ccp);
         return rtRepository.findById(id, new PartitionKey(id)).isPresent();

@@ -71,6 +71,4 @@ public class RedirectController {
             return "error";
         }
     }
-
-
 }

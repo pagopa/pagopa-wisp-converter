@@ -1,8 +1,7 @@
 package it.gov.pagopa.wispconverter.service;
 
-import com.azure.messaging.servicebus.ServiceBusClientBuilder;
-import com.azure.messaging.servicebus.ServiceBusMessage;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import com.azure.messaging.servicebus.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import it.gov.pagopa.wispconverter.controller.model.ReceiptTimerRequest;
 import it.gov.pagopa.wispconverter.repository.CacheRepository;
@@ -18,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -30,6 +30,7 @@ public class ReceiptTimerService {
 
     public static final String CACHING_KEY_TEMPLATE = "wisp_timer_%s";
     public static final String PAYMENT_TOKEN_CACHING_KEY_TEMPLATE = "2_wisp_%s";
+    private final ObjectMapper mapper = new ObjectMapper();
     private final CacheRepository cacheRepository;
     private final ReService reService;
     @Value("${azure.sb.wisp-payment-timeout-queue.connectionString}")
@@ -39,15 +40,20 @@ public class ReceiptTimerService {
     @Value("${disable-service-bus-sender}")
     private boolean disableServiceBusSender;
     private ServiceBusSenderClient serviceBusSenderClient;
+    private ServiceBusReceiverClient serviceBusReceiverClient;
     @Autowired
     private ECommerceHangTimerService eCommerceHangTimerService;
 
     @PostConstruct
     public void post() {
-        serviceBusSenderClient =
-                new ServiceBusClientBuilder()
-                        .connectionString(connectionString)
+        ServiceBusClientBuilder builder = new ServiceBusClientBuilder();
+        serviceBusSenderClient = builder.connectionString(connectionString)
                         .sender()
+                        .queueName(queueName)
+                        .buildClient();
+
+        serviceBusReceiverClient = builder.connectionString(connectionString)
+                        .receiver()
                         .queueName(queueName)
                         .buildClient();
     }
@@ -102,6 +108,21 @@ public class ReceiptTimerService {
         }
     }
 
+    public ReceiptDto peek(String paymentToken) {
+        // read sequence number from redis cache
+        String sequenceNumberKey = String.format(CACHING_KEY_TEMPLATE, paymentToken);
+        String sequenceNumberString = cacheRepository.read(sequenceNumberKey, String.class);
+        // read message without changing the service bus state
+        ServiceBusReceivedMessage message = serviceBusReceiverClient.peekMessage(Long.parseLong(sequenceNumberString));
+        log.debug("Get message. Session: {}, Sequence #: {}. Contents: {}", message.getMessageId(), message.getSequenceNumber(), message.getBody());
+        try {
+            return mapper.readValue(message.getBody().toStream(), ReceiptDto.class);
+        } catch (Exception e) {
+            log.error("Error when read ReceiptDto value from message: '{}'. Body: '{}'", message.getMessageId(), message.getBody());
+            return null;
+        }
+    }
+
     public void cancelScheduledMessage(List<String> paymentTokens) {
         if (!disableServiceBusSender) {
             paymentTokens.forEach(this::cancelScheduledMessage);
@@ -130,7 +151,7 @@ public class ReceiptTimerService {
         try {
             serviceBusSenderClient.cancelScheduledMessage(sequenceNumber);
         } catch (Exception exception) {
-            log.debug(String.format("Scheduled message with sequence number [%s] not deleted. Cause: %s", sequenceNumberString, exception.getMessage()));
+            log.debug("Scheduled message with sequence number [{}] not deleted. Cause: {}", sequenceNumberString, exception.getMessage());
         }
     }
 

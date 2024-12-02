@@ -8,6 +8,7 @@ import gov.telematici.pagamenti.ws.nodoperpa.ppthead.IntestazionePPT;
 import it.gov.digitpa.schemas._2011.pagamenti.CtRichiestaPagamentoTelematico;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
+import it.gov.pagopa.wispconverter.repository.model.RPTRequestEntity;
 import it.gov.pagopa.wispconverter.service.mapper.RPTMapper;
 import it.gov.pagopa.wispconverter.service.model.PaymentRequestDomainDTO;
 import it.gov.pagopa.wispconverter.service.model.paymentrequest.PaymentRequestDTO;
@@ -35,7 +36,7 @@ public class RPTExtractorService {
 
     private final ConfigCacheService cacheService;
 
-    private final ReService reService;
+    private final RptCosmosService rptCosmosService;
 
     private final JaxbElementUtil jaxbElementUtil;
 
@@ -292,18 +293,11 @@ public class RPTExtractorService {
         return paymentRequest;
     }
 
-    /*
-    public void sendEventForExtractedRPTs(Collection<RPTContentDTO> rpts) {
+    public SessionDataDTO getSessionDataFromSessionId(String sessionId) {
+        // try to retrieve the RPT previously persisted in storage from the sessionId
+        RPTRequestEntity rptRequestEntity = rptCosmosService.getRPTRequestEntity(sessionId);
 
-        // creating event to be persisted for RE
-        if (Boolean.TRUE.equals(isTracingOnREEnabled)) {
-            for (RPTContentDTO rpt : rpts) {
-                MDC.put(Constants.MDC_DOMAIN_ID, rpt.getRpt().getDomain().getDomainId());
-                MDC.put(Constants.MDC_IUV, rpt.getIuv());
-                MDC.put(Constants.MDC_CCP, rpt.getCcp());
-                reService.sendEvent(WorkflowStatus.RPT_EXTRACTED);
-            }
-        }
+        // use the retrieved RPT for generate session data information on which the next execution will operate
+        return this.extractSessionData(rptRequestEntity.getPrimitive(), rptRequestEntity.getPayload());
     }
-     */
 }

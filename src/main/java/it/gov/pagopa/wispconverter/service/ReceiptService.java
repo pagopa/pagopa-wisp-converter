@@ -16,7 +16,6 @@ import it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDt
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
-import it.gov.pagopa.wispconverter.repository.model.RPTRequestEntity;
 import it.gov.pagopa.wispconverter.repository.model.RTRequestEntity;
 import it.gov.pagopa.wispconverter.repository.model.ReceiptDeadLetterEntity;
 import it.gov.pagopa.wispconverter.repository.model.enumz.*;
@@ -67,8 +66,6 @@ public class ReceiptService {
     private final JaxbElementUtil jaxbElementUtil;
 
     private final ConfigCacheService configCacheService;
-
-    private final RptCosmosService rptCosmosService;
 
     private final RtReceiptCosmosService rtReceiptCosmosService;
 
@@ -202,7 +199,7 @@ public class ReceiptService {
         String iuv = retrieveIuvFromCache(receipt, noticeNumber);
 
         // use the session-id for generate session data information on which the next execution will operate
-        SessionDataDTO sessionData = getSessionDataFromSessionId(receipt.getSessionId());
+        SessionDataDTO sessionData = rptExtractorService.getSessionDataFromSessionId(receipt.getSessionId());
         CommonFieldsDTO commonFields = sessionData.getCommonFields();
 
         /*
@@ -291,7 +288,7 @@ public class ReceiptService {
             CachedKeysMapping cachedMapping = decouplerService.getCachedMappingFromNavToIuv(paSendRTV2Request.getIdPA(), noticeNumber);
 
             // use session-id for generate session data information on which the next execution will operate
-            SessionDataDTO sessionData = getSessionDataFromSessionId(paymentNote);
+            SessionDataDTO sessionData = rptExtractorService.getSessionDataFromSessionId(paymentNote);
             CommonFieldsDTO commonFields = sessionData.getCommonFields();
 
             // retrieve station from cache and extract receipt from request
@@ -390,14 +387,6 @@ public class ReceiptService {
                 .paaInviaRTPayload(paaInviaRtPayload)
                 .rtPayload(rawGeneratedReceipt)
                 .build();
-    }
-
-    public SessionDataDTO getSessionDataFromSessionId(String sessionId) {
-        // try to retrieve the RPT previously persisted in storage from the sessionId
-        RPTRequestEntity rptRequestEntity = rptCosmosService.getRPTRequestEntity(sessionId);
-
-        // use the retrieved RPT for generate session data information on which the next execution will operate
-        return this.rptExtractorService.extractSessionData(rptRequestEntity.getPrimitive(), rptRequestEntity.getPayload());
     }
 
     private void sendReceiptToCreditorInstitution(
@@ -755,7 +744,7 @@ public class ReceiptService {
         sessionIdDto.setSessionId(sessionId);
         this.deleteHangTimerCacheKey(sessionIdDto);
 
-        SessionDataDTO sessionDataDTO = getSessionDataFromSessionId(sessionId);
+        SessionDataDTO sessionDataDTO = rptExtractorService.getSessionDataFromSessionId(sessionId);
         gov.telematici.pagamenti.ws.papernodo.ObjectFactory objectFactory = new gov.telematici.pagamenti.ws.papernodo.ObjectFactory();
 
         // retrieve configuration data from cache
