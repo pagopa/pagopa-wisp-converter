@@ -1,6 +1,7 @@
 package it.gov.pagopa.wispconverter.config;
 
 import com.azure.core.credential.AzureKeyCredential;
+import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.DirectConnectionConfig;
 import com.azure.cosmos.GatewayConnectionConfig;
@@ -42,6 +43,9 @@ public class CosmosDBConfig extends AbstractCosmosConfiguration {
     @Value("${azure.cosmos.populate-query-metrics}")
     private Boolean cosmosQueryMetrics;
 
+    @Value("${azure.cosmos.consistency-level:SESSION}")
+    private String cosmosConsistencyLevel;
+
     @Bean
     public CosmosClientBuilder getCosmosClientBuilder() {
         var azureKeyCredential = new AzureKeyCredential(cosmosKey);
@@ -50,6 +54,7 @@ public class CosmosDBConfig extends AbstractCosmosConfiguration {
         return new CosmosClientBuilder()
                 .endpoint(cosmosUri)
                 .credential(azureKeyCredential)
+                .consistencyLevel(ConsistencyLevel.valueOf(cosmosConsistencyLevel))
                 .directMode(directConnectionConfig, gatewayConnectionConfig);
     }
 
