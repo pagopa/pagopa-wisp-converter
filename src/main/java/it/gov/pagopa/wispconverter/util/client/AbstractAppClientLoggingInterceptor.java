@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -367,7 +366,7 @@ public abstract class AbstractAppClientLoggingInterceptor implements ClientHttpR
                             .uri(request.getURI().toString())
                             .method(request.getMethod())
                             .headers(request.getHeaders())
-                            .payload(Arrays.toString(body))
+                            .payload(new String(body))
                             .build();
         }
         ReResponseContext responseContext = null;
