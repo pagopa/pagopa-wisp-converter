@@ -8,8 +8,12 @@ import it.gov.pagopa.wispconverter.util.client.RequestResponseLoggingProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 
+import java.util.regex.Pattern;
+
 @Slf4j
 public class DecouplerCachingClientLoggingInterceptor extends AbstractAppClientLoggingInterceptor {
+
+    private final Pattern sessionIdPattern = Pattern.compile("\\\"sessionId\\\":\\\"([a-zA-Z0-9-]+)\\\"");
 
     public DecouplerCachingClientLoggingInterceptor(RequestResponseLoggingProperties clientLoggingProperties, ReService reService, Boolean isTracingOfClientOnREEnabled) {
         super(clientLoggingProperties, reService, ClientServiceEnum.DECOUPLER);

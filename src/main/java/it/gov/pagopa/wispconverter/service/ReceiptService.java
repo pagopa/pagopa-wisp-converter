@@ -84,7 +84,7 @@ public class ReceiptService {
     private final ServiceBusService serviceBusService;
 
     private final ReceiptDeadLetterRepository receiptDeadLetterRepository;
-    
+
     @Autowired
     private final it.gov.pagopa.gen.wispconverter.client.decouplercaching.invoker.ApiClient decouplerCachingClientWithRetry;
 
@@ -877,11 +877,11 @@ public class ReceiptService {
         // deactivate the sessionId inside the cache
         it.gov.pagopa.gen.wispconverter.client.decouplercaching.api.DefaultApi apiInstance = new it.gov.pagopa.gen.wispconverter.client.decouplercaching.api.DefaultApi(decouplerCachingClientWithRetry);
 
-        CompletableFuture.runAsync(() -> {
+        CompletableFuture.runAsync(MDCUtil.withMdc(() -> {
             // necessary only if rptTimer is triggered, otherwise it has already been removed
             log.debug("[{}][cache-key={}] delete-hang-timer-cache-key", sessionIdDto.getSessionId(), Instant.now().toString());
             apiInstance.deleteSessionId(sessionIdDto, MDC.get(Constants.MDC_REQUEST_ID));
-        }).exceptionally(throwable -> {
+        })).exceptionally(throwable -> {
             log.error("[cache-key={}] Exception while delete-hang-timer-cache-key: {}", sessionIdDto.getSessionId(), throwable.getMessage());
             return null;
         });
