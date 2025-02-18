@@ -69,7 +69,7 @@ microservice-chart: &microservice-chart
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     OTEL_SERVICE_NAME: "pagopa-wisp-converter"
-    OTEL_RESOURCE_ATTRIBUTES: "service.environment=dev"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
