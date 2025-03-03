@@ -82,7 +82,7 @@ microservice-chart: &microservice-chart
   envConfig: &envConfig
     JAVA_OPTS: "-XX:MaxHeapSize=1780m -XX:MinHeapSize=64m"
     WEBSITE_SITE_NAME: 'pagopawispconverter' # required to show cloud role name in application insights
-    ENV: 'aks-prod'
+    ENV: 'prod'
     APP_LOGGING_LEVEL: 'INFO'
     APP_LOGGING_TRACING_LEVEL: 'ERROR'
     DEFAULT_LOGGING_LEVEL: 'INFO'
