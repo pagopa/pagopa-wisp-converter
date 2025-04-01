@@ -3,13 +3,13 @@ name: Generate and send report
 on:
   schedule:
   # scheduled generation cron
-  #- cron: '00 01 * * *' # (01:00AM GTM) generate last day report
-  #- cron: '00 06 * * 1' # (06:00AM GTM) generate last week report on monday
-  #- cron: '30 06 1 * *' # (06:00AM GTM) generate last month report on first day of the month
+  - cron: '00 00 * * *' # (01:00AM GTM) generate last day report
+  - cron: '00 06 * * 1' # (06:00AM GTM) generate last week report on monday
+  - cron: '30 06 1 * *' # (06:00AM GTM) generate last month report on first day of the month
   # scheduled send cron
-  #- cron: '00 07 * * *' # (07:00AM GTM) send last day report
-  #- cron: '30 07 * * 1' # (07:30AM GTM) send last week report on monday
-  #- cron: '35 07 1 * *' # (07:35AM GTM) send last month report on first day of the month
+  - cron: '00 07 * * *' # (07:00AM GTM) send last day report
+  - cron: '30 07 * * 1' # (07:30AM GTM) send last week report on monday
+  - cron: '35 07 1 * *' # (07:35AM GTM) send last month report on first day of the month
 
   workflow_dispatch:
     inputs:

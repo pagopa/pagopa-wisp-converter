@@ -76,17 +76,11 @@ class Constants:
     # constant for field 'not_completed' in 'trigger_pritives' section
     TRIGGER_PRIMITIVE_NOT_COMPLETED_MACROTAG = "all_not_completed"
     
-    # constant for field 'with_ok_receipts_all_sent'
-    COMPLETED_OK_RECEIPT_TOTAL = "with_ok_receipts_all_sent"
+    # constant for field 'with_ok_receipts'
+    COMPLETED_OK_RECEIPT_TOTAL = "with_ok_receipts"
     
-    # constant for field 'with_ko_receipts_all_sent'
-    COMPLETED_KO_RECEIPT_TOTAL = "with_ko_receipts_all_sent"
-    
-    # constant for field 'with_ok_receipts_only_sent_after_retry'
-    COMPLETED_OK_RECEIPT_SENT_BY_RETRY = "with_ok_receipts_only_sent_after_retry"
-    
-    # constant for field 'with_ko_receipts_only_sent_after_retry'
-    COMPLETED_KO_RECEIPT_SENT_BY_RETRY = "with_ko_receipts_only_sent_after_retry"
+    # constant for field 'with_ko_receipts'
+    COMPLETED_KO_RECEIPT_TOTAL = "with_ko_receipts"
     
     # constant for field 'rejected'
     NOT_COMPLETED_REJECTED = "rejected"
@@ -96,6 +90,9 @@ class Constants:
     
     # constant for field 'scheduled'
     NOT_COMPLETED_SCHEDULED = "scheduled"
+    
+    # constant for field 'ongoing'
+    NOT_COMPLETED_ONGOING = "ongoing"
     
     # constant for field 'never_sent'
     NOT_COMPLETED_NEVER_SENT = "never_sent"

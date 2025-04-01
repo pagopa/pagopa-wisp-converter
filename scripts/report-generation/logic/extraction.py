@@ -48,16 +48,146 @@ class Extractor:
                 statistics.no_carts.add(trigger_primitive.session_id)
 
         return statistics
-    
 
     def _extract_payment_status_tracking_by_session_id(self, grouped_trigger_primitives: PrimitiveTriggerStatistics, db: WispDismantlingDatabase):
         
         # merge all primitives' session IDs in a single list
         all_session_ids = []
-        carts_session_ids = grouped_trigger_primitives.carts.session_ids
-        no_carts_session_ids = grouped_trigger_primitives.no_carts.session_ids
-        all_session_ids.extend(carts_session_ids)
-        all_session_ids.extend(no_carts_session_ids)
+        rptcarts_session_ids = grouped_trigger_primitives.carts.session_ids
+        singlerpt_session_ids = grouped_trigger_primitives.no_carts.session_ids
+        all_session_ids.extend(rptcarts_session_ids)
+        all_session_ids.extend(singlerpt_session_ids)
+        
+        completed_receipts = CompletedReceiptStatistics()
+        not_completed_receipts = NotCompletedReceiptStatistics()
+        not_completed_triggers = []
+
+        completed_carts = set()
+        completed_no_carts = set()
+        number_of_primitives = len(all_session_ids)
+        already_analyzed_count = 0
+
+        sessionid_in_errors = set()
+        for session_id in all_session_ids:
+
+            # Showing "already analyzed" count for better tracking process
+            already_analyzed_count += 1
+            if already_analyzed_count % 100 == 0:
+                percentage_analyzed = Utility.safe_divide(already_analyzed_count * 100, number_of_primitives)
+                logging.info(f"\t[INFO ][Extractor      ] At [{Utility.get_now_datetime()}] report details were generated on [{already_analyzed_count}/{number_of_primitives}] triggered primitives ({percentage_analyzed:.03f}%)...")
+
+            receipts = db.get_receipts_by_session_id(session_id)
+
+            # Fallback if no RT is written in receipts-rt
+            if len(receipts) == 0:
+                sessionid_in_errors.add(session_id)
+
+            for receipt in receipts:
+                    
+                receipt_status = receipt.status
+                receipt_id = receipt.id
+
+                # The receipt was correctly sent (either by direct send or by retry), add it as completed
+                if receipt_status == 'SENT':
+                    if receipt.type == 'OK':
+                        completed_receipts.add_as_ok()
+                        # Include sessionId for define the counter of completed RPT carts/single RPT
+                        if session_id in singlerpt_session_ids:
+                            completed_no_carts.add(session_id)
+                        else:
+                            completed_carts.add(session_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        completed_receipts.add_as_ko()
+                        
+                # The receipt was refused by creditor institution
+                elif receipt_status == 'SENT_REJECTED_BY_EC':
+                    if receipt.type == 'OK':
+                        not_completed_receipts.rejected.add_as_ok(receipt_id)
+                        # Include sessionId for define the counter of completed RPT carts/single RPT
+                        if session_id in singlerpt_session_ids:
+                            completed_no_carts.add(session_id)
+                        else:
+                            completed_carts.add(session_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        not_completed_receipts.rejected.add_as_ko(receipt_id)
+                        
+                # The receipt was not sent because the number of tries occurred are greater than max limit 
+                elif receipt_status == 'NOT_SENT':
+                    if receipt.type == 'OK':
+                        not_completed_receipts.not_sent_end_retry.add_as_ok(receipt_id)
+                        # Include sessionId for define the counter of completed RPT carts/single RPT
+                        if session_id in singlerpt_session_ids:
+                            completed_no_carts.add(session_id)
+                        else:
+                            completed_carts.add(session_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        not_completed_receipts.not_sent_end_retry.add_as_ko(receipt_id)
+
+                # The receipt was not sent but the operation is scheduled and it could result as send in future
+                elif receipt_status == 'SCHEDULED' or receipt_status == 'SENDING':
+                    if receipt.type == 'OK':
+                        not_completed_receipts.sending_or_scheduled.add_as_ok(receipt_id)
+                        # Include sessionId for define the counter of completed RPT carts/single RPT
+                        if session_id in singlerpt_session_ids:
+                            completed_no_carts.add(session_id)
+                        else:
+                            completed_carts.add(session_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        not_completed_receipts.sending_or_scheduled.add_as_ko(receipt_id)
+
+                # The receipt was not sent but the operation is ongoing
+                elif receipt_status == 'REDIRECT' or receipt_status == 'PAYING':
+                    if receipt.type == 'OK':
+                        not_completed_receipts.ongoing.add_as_ok(receipt_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        not_completed_receipts.ongoing.add_as_ko(receipt_id)
+
+                # The receipt was not sent and it is in an not-consistent state
+                else:
+                    if receipt.type == 'OK':
+                        not_completed_receipts.never_sent.add_as_ok(receipt_id)
+                    else:
+                        sessionid_in_errors.add(session_id)
+                        not_completed_triggers.append(Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_NO_STATE)
+                        not_completed_receipts.never_sent.add_as_ko(receipt_id)
+            
+        # Cataloguing errors by triggered business process
+        logging.info(f"\t[INFO ][Extractor      ] Retrieving the cause on KO receipt for [{len(set(sessionid_in_errors))}] sessions...")
+        for session_id in sessionid_in_errors:
+            events = db.get_rt_trigger_by_re_events(session_id)
+            event_set = set((event.session_id, event.business_process) for event in events)
+            for event in event_set:
+                business_process = event[1].replace('-', '_')
+                not_completed_triggers.append(business_process)
+        
+        logging.info(f"\t[INFO ][Extractor      ] At [{Utility.get_now_datetime()}] report details were generated all on [{number_of_primitives}] triggered primitives!")
+        not_completed_triggers_map = {
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_RPT_TIMEOUT: 0,
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_REDIRECT: 0,
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_RECEIPT_KO: 0,
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_ECOMMERCE_TIMEOUT: 0,
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_PAYMENTTOKEN_TIMEOUT: 0,
+            Constants.TRIGGER_PRIMITIVE_NOT_COMPLETED_NO_STATE: 0,
+        }
+        for business_process in not_completed_triggers:
+            if business_process in not_completed_triggers_map:
+                not_completed_triggers_map[business_process] += 1
+
+        return (completed_receipts, not_completed_receipts, not_completed_triggers_map, len(completed_carts), len(completed_no_carts))
+
+       
+    """
+    def _extract_payment_status_tracking_by_session_id_OLD(self, grouped_trigger_primitives: PrimitiveTriggerStatistics, db: WispDismantlingDatabase):
+        
+        # merge all primitives' session IDs in a single list
+        all_session_ids = []
+        all_session_ids.extend(grouped_trigger_primitives.carts.session_ids)
+        all_session_ids.extend(grouped_trigger_primitives.no_carts.session_ids)
         
         completed_payments = CompletedReceiptStatistics()
         not_completed_payments = NotCompletedReceiptStatistics()
@@ -69,11 +199,13 @@ class Extractor:
 
         for session_id in all_session_ids:
 
+            # Showing "already analyzed" count for better tracking process
             already_analyzed_count += 1
             if already_analyzed_count % 100 == 0:
                 number_of_primitives = len(all_session_ids)
                 percentage_analyzed = Utility.safe_divide(already_analyzed_count * 100, number_of_primitives)
                 logging.info(f"\t[INFO ][Extractor      ] At [{Utility.get_now_datetime()}] report details were generated on [{already_analyzed_count}/{number_of_primitives}] triggered primitives ({percentage_analyzed:.03f}%)...")
+
 
             re_events = db.get_payment_status_by_re_events(session_id)
             
@@ -175,7 +307,7 @@ class Extractor:
                 not_completed_triggers_map[business_process] += 1
 
         return (completed_payments, not_completed_payments, not_completed_triggers_map, len(completed_carts), len(completed_no_carts))
-
+    """
             
     def generate_report_data(self, db_client: WispDismantlingDatabase, apiconfig_client = APIConfigCacheClient):
         
@@ -242,14 +374,13 @@ class Extractor:
             
         # Generate statistics about completed payments
         numeric_data.completed_payments = CompletedPaymentsReportInfo(closed_as_ok=completed_payments.with_ok_receipts_all_sent,
-                                                                      closed_as_ko=completed_payments.with_ko_receipts_all_sent,
-                                                                      with_ok_receipts_only_sent_after_retry=completed_payments.with_ok_receipts_only_sent_after_retry,
-                                                                      with_ko_receipts_only_sent_after_retry=completed_payments.with_ko_receipts_only_sent_after_retry)
+                                                                      closed_as_ko=completed_payments.with_ko_receipts_all_sent)
             
         # Generate statistics about not completed payments
         numeric_data.not_completed_payments = NotCompletedPaymentsReportInfo(not_sent_end_retry=not_completed_payments.not_sent_end_retry,
                                                                              rejected=not_completed_payments.rejected,
                                                                              scheduled=not_completed_payments.sending_or_scheduled,
+                                                                             ongoing=not_completed_payments.ongoing,
                                                                              never_sent=not_completed_payments.never_sent)
         return numeric_data
     

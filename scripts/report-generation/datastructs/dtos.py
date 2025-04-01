@@ -13,12 +13,12 @@ class PrimitiveTriggerCounter:
 
     def __init__(self):
         self.count = 0;
-        self.session_ids = []
+        self.session_ids = set()
 
 
     def add(self, session_id):
         self.count += 1
-        self.session_ids.append(session_id) 
+        self.session_ids.add(session_id) 
 
 
 # ============================================================================
@@ -28,8 +28,6 @@ class CompletedReceiptStatistics:
     def __init__(self):
         self.with_ok_receipts_all_sent = 0
         self.with_ko_receipts_all_sent = 0
-        self.with_ok_receipts_only_sent_after_retry = 0
-        self.with_ko_receipts_only_sent_after_retry = 0
 
 
     def add_as_ok(self):
@@ -38,14 +36,6 @@ class CompletedReceiptStatistics:
 
     def add_as_ko(self):
         self.with_ko_receipts_all_sent += 1
-
-
-    def add_as_with_ok_receipts_only_sent_after_retry(self):
-        self.with_ok_receipts_only_sent_after_retry += 1
-
-
-    def add_as_with_ko_receipts_only_sent_after_retry(self):
-        self.with_ko_receipts_only_sent_after_retry += 1
  
 
 # ============================================================================
@@ -91,4 +81,5 @@ class NotCompletedReceiptStatistics:
         self.rejected = ReceiptDetailStatistics()
         self.not_sent_end_retry = ReceiptDetailStatistics()
         self.sending_or_scheduled = ReceiptDetailStatistics()
+        self.ongoing = ReceiptDetailStatistics()
         self.never_sent = ReceiptDetailStatistics()

@@ -161,6 +161,23 @@ class WispDismantlingDatabase:
         return result
     
 
+    def get_rt_trigger_by_re_events(self, session_id):
+        query = f"SELECT * FROM re WHERE re.sessionId = '{session_id}' AND re.status = 'COMMUNICATION_WITH_CREDITOR_INSTITUTION_PROCESSED' AND re.businessProcess IN ('rpt-timeout-trigger', 'redirect', 'ecommerce-hang-timeout-trigger', 'payment-token-timeout-trigger', 'receipt-ko', 'receipt-ok')"
+        result = []
+
+        try:
+            query_items = self.__re_container.query_items(query=query, enable_cross_partition_query=True)
+            for item in query_items:
+                entity = REEventEntity.from_db_item(item)
+                result.append(entity)
+
+        except exceptions.CosmosHttpResponseError as ex:
+            logging.error(f"\t[ERROR][WispDismantDB  ] Error during execution of query [{query}] in '{Constants.RE_CONTAINER_NAME}' container. {ex.message}")
+            raise ex
+
+        return result
+    
+
     def get_receipts_by_session_id(self, session_id):
         query = f"SELECT * FROM receiptrt WHERE receiptrt.sessionId = '{session_id}'"
         result = []
