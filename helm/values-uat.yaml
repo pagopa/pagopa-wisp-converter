@@ -75,6 +75,7 @@ microservice-chart: &microservice-chart
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     REDIS_PORT: "6380"
     COSMOS_URI: "https://pagopa-u-weu-nodo-wispconv-cosmos-account.documents.azure.com:443/"
     COSMOS_READ_REGION: "West Europe"
