@@ -14,4 +14,5 @@ public class AppInfoResponse {
     private String name;
     private String version;
     private String environment;
+    private String cacheVersion;
 }
