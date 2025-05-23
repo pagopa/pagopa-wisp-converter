@@ -37,6 +37,7 @@ class CacheRepositoryTest {
 
     @Test
     void hasKey() {
+        when(redisSimpleTemplate.hasKey(anyString())).thenReturn(true); // Mock ValueOperations
         cacheRepository.hasKey("key");
         verify(redisSimpleTemplate, times(1)).hasKey(eq("key"));
     }
