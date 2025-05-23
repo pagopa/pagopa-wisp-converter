@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.wispconverter.controller.model.AppInfoResponse;
+import it.gov.pagopa.wispconverter.repository.CacheRepository;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
 import it.gov.pagopa.wispconverter.service.ConfigCacheService;
 import it.gov.pagopa.wispconverter.service.DecouplerService;
@@ -48,6 +49,8 @@ class HomeTest {
 
     @MockBean
     private ConfigCacheService configCacheService;
+    @MockBean
+    private CacheRepository cacheRepository;
 
     @MockBean
     private ReceiptDeadLetterRepository receiptDeadLetterRepository;
