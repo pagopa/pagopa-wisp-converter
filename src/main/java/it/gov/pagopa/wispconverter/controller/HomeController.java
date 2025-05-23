@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.wispconverter.controller.model.AppInfoResponse;
+import it.gov.pagopa.wispconverter.service.ConfigCacheService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -32,6 +34,9 @@ public class HomeController {
 
     @Value("${info.properties.environment}")
     private String environment;
+
+    @Autowired
+    private ConfigCacheService configCacheService;
 
 
     /**
@@ -61,6 +66,7 @@ public class HomeController {
                 .name(name)
                 .version(version)
                 .environment(environment)
+                .cacheVersion(configCacheService.getConfigData().getVersion())
                 .build();
     }
 
