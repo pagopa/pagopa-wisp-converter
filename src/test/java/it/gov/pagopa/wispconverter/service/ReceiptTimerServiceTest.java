@@ -92,10 +92,6 @@ class ReceiptTimerServiceTest {
     long sequenceNumber1 = 123L;
     long sequenceNumber2 = 456L;
 
-    when(cacheRepository.read(eq("2_wisp_token1"), eq(ReceiptTimerRequest.class)))
-            .thenReturn(ReceiptTimerRequest.builder().sessionId("sessionId").build());
-    when(cacheRepository.read(eq("2_wisp_token2"), eq(ReceiptTimerRequest.class)))
-            .thenReturn(ReceiptTimerRequest.builder().sessionId("sessionId").build());
     when(cacheRepository.read(sequenceNumberKey1, String.class))
         .thenReturn(Long.toString(sequenceNumber1));
     when(cacheRepository.read(sequenceNumberKey2, String.class))
