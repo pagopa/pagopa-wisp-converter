@@ -113,7 +113,6 @@ class ReceiptTimerServiceTest {
     List<String> paymentTokens = List.of("token1");
 
     when(cacheRepository.read(any(String.class), eq(String.class))).thenReturn(null);
-    when(cacheRepository.read(any(String.class), eq(ReceiptTimerRequest.class))).thenReturn(null);
 
     receiptTimerService.cancelScheduledMessage(paymentTokens);
 
