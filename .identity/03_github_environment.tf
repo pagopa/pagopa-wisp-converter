@@ -52,6 +52,7 @@ locals {
     "REPORT_DATAEXPLORER_URL": local.report_generation.dataexplorer_url,
     "REPORT_DATABASE_URL": local.report_generation.database_url,
     "REPORT_DATABASE_REGION": local.report_generation.database_region,
+    "WORKLOAD_IDENTITY_ID": data.azurerm_user_assigned_identity.workload_identity_clientid.client_id
   }
   repo_secrets = {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,
