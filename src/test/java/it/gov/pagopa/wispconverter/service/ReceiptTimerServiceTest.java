@@ -107,7 +107,6 @@ class ReceiptTimerServiceTest {
   @Test
   void testCancelScheduledMessage_notFound() {
     List<String> paymentTokens = List.of("token1");
-
     when(cacheRepository.read(any(String.class), eq(String.class))).thenReturn(null);
 
     receiptTimerService.cancelScheduledMessage(paymentTokens);
