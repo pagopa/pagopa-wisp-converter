@@ -33,7 +33,7 @@ microservice-chart: &microservice-chart
   ingress: &ingress
     create: true
     host: "weudev.nodo.internal.dev.platform.pagopa.it"
-    path: /pagopa-wispconverter-1/(.*)
+    path: /pagopa-wispconverte/(.*)
     servicePort: 8080
   serviceAccount:
     name: "nodo-workload-identity"
@@ -201,7 +201,7 @@ wisp-converter-cron:
   fullnameOverride: "pagopa-wisp-converter-cron"
   ingress:
     !!merge <<: *ingress
-    path: /pagopa-wispconverter-notused-1/(.*)
+    path: /pagopa-wispconverter-notused/(.*)
   resources:
     !!merge <<: *resources
     requests:
