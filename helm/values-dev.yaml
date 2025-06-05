@@ -126,9 +126,9 @@ microservice-chart: &microservice-chart
     RE_TRACING_INTERNAL_DECOUPLERCACHING_ENABLED: 'true'
     RE_TRACING_INTERNAL_CHECKOUTINTERACTION_ENABLED: 'true'
     SPRING_PROFILES_ACTIVE: "default,jsonLog"
-  envFieldRef: &envFieldRef
-    APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
-    APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
+  # envFieldRef: &envFieldRef
+  #   APP_NAME: "metadata.labels['app.kubernetes.io/instance']"
+  #   APP_VERSION: "metadata.labels['app.kubernetes.io/version']"
   envSecret: &envSecret
     # required
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'azure-insight-connection-string'
@@ -191,8 +191,8 @@ app:
     !!merge <<: *resources
   envConfig:
     !!merge <<: *envConfig
-  envFieldRef:
-    !!merge <<: *envFieldRef
+  # envFieldRef:
+  #   !!merge <<: *envFieldRef
   envSecret:
     !!merge <<: *envSecret
 # 2 - wisp converter cron
@@ -219,7 +219,7 @@ cron:
     !!merge <<: *envConfig
     CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
     DISABLE_SERVICE_BUS_RECEIVER: 'true'
-  envFieldRef:
-    !!merge <<: *envFieldRef
+  # envFieldRef:
+  #   !!merge <<: *envFieldRef
   envSecret:
     !!merge <<: *envSecret
