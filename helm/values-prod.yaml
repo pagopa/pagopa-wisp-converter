@@ -1,7 +1,7 @@
 microservice-chart: &microservice-chart
   namespace: "nodo"
   nameOverride: ""
-  fullnameOverride: "wisp-converter"
+  fullnameOverride: "pagopawispconverter"
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
     tag: "1.1.6"
