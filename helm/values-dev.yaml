@@ -33,7 +33,7 @@ microservice-chart: &microservice-chart
   ingress: &ingress
     create: true
     host: "weudev.nodo.internal.dev.platform.pagopa.it"
-    path: /pagopa-wispconverter/(.*)
+    path: /pagopa-wispconverter-1/(.*)
     servicePort: 8080
   serviceAccount:
     name: "nodo-workload-identity"
@@ -201,7 +201,7 @@ wisp-converter-cron:
   fullnameOverride: "pagopa-wisp-converter-cron"
   ingress:
     !!merge <<: *ingress
-    path: /pagopa-wispconverter-notused/(.*)
+    path: /pagopa-wispconverter-notused-1/(.*)
   resources:
     !!merge <<: *resources
     requests:
@@ -223,4 +223,3 @@ wisp-converter-cron:
     !!merge <<: *envFieldRef
   envSecret:
     !!merge <<: *envSecret
-    FAKE: 'report-generation-wisp-slack-webhook-url'
