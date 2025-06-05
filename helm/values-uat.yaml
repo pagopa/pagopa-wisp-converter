@@ -4,7 +4,7 @@ microservice-chart: &microservice-chart
   fullnameOverride: "pagopa-wisp-converter"
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
-    tag: "1.3.0"
+    tag: "1.4.0"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
