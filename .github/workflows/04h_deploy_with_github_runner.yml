@@ -14,7 +14,7 @@ on:
 
 env:
   NAMESPACE: nodo
-  APP_NAME: pagopawispconverter
+  APP_NAME: pagopa-wisp-converter
 
 
 permissions:
