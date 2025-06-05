@@ -182,7 +182,7 @@ microservice-chart: &microservice-chart
       envConfig: {}
       envSecret: {}
 # 1 - wisp converter service
-app:
+wisp-converter-service:
   !!merge <<: *microservice-chart
   fullnameOverride: "pagopa-wisp-converter"
   ingress:
@@ -196,7 +196,7 @@ app:
   envSecret:
     !!merge <<: *envSecret
 # 2 - wisp converter cron
-cron:
+wisp-converter-cron:
   !!merge <<: *microservice-chart
   fullnameOverride: "pagopa-wisp-converter-cron"
   ingress:
