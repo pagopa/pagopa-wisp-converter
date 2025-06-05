@@ -24,7 +24,7 @@ microservice-chart: &microservice-chart
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 2
+    replicas: 3
   service:
     create: true
     type: ClusterIP
@@ -51,14 +51,14 @@ microservice-chart: &microservice-chart
         - all
   resources: &resources
     requests:
-      memory: "1792Mi"
+      memory: "2Gi"
       cpu: "200m"
     limits:
-      memory: "2048Mi"
-      cpu: "1000m"
+      memory: "2.5Gi"
+      cpu: "800m"
   autoscaling: &autoscaling
     enable: true
-    minReplica: 2
+    minReplica: 3
     maxReplica: 10
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
