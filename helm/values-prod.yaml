@@ -33,7 +33,7 @@ microservice-chart: &microservice-chart
   ingress: &ingress
     create: true
     host: "weuprod.nodo.internal.platform.pagopa.it"
-    path: /pagopa-wisp-converter(/|$)(.*)
+    path: /pagopa-wisp-converter/(.*)
     servicePort: 8080
   serviceAccount:
     name: "nodo-workload-identity"
