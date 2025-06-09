@@ -1,7 +1,7 @@
 microservice-chart: &microservice-chart
   namespace: "nodo"
   nameOverride: ""
-  fullnameOverride: "pagopa-wisp-converter"
+  fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
     tag: "1.6.0"
@@ -210,8 +210,9 @@ microservice-chart: &microservice-chart
       envConfig: {}
       envSecret: {}
 # 1 - wisp converter service
-app:
+wisp-converter-service:
   !!merge <<: *microservice-chart
+  fullnameOverride: "pagopa-wisp-converter"
   ingress:
     !!merge <<: *ingress
   resources:
@@ -223,8 +224,9 @@ app:
   envSecret:
     !!merge <<: *envSecret
 # 2 - wisp converter cron
-cron:
+wisp-converter-cron:
   !!merge <<: *microservice-chart
+  fullnameOverride: "pagopa-wisp-converter-cron"
   ingress:
     !!merge <<: *ingress
     path: /pagopa-wispconverter-notused/(.*)
