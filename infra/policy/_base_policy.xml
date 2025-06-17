@@ -1,7 +1,7 @@
 <policies>
     <inbound>
         <base/>
-        <set-backend-service base-url="https://${hostname}/pagopa-wisp-converter"/>
+        <set-backend-service base-url="https://${hostname}/pagopa-wispconverter"/>
     </inbound>
     <outbound>
         <base/>
