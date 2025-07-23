@@ -4,7 +4,7 @@ microservice-chart: &microservice-chart
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
-    tag: "1.6.2-1-PIDM-729-sessionId-null"
+    tag: "1.7.0"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
