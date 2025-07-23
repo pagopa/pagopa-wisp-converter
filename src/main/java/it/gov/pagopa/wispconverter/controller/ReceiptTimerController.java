@@ -16,14 +16,17 @@ import it.gov.pagopa.wispconverter.service.ReceiptTimerService;
 import it.gov.pagopa.wispconverter.service.RtReceiptCosmosService;
 import it.gov.pagopa.wispconverter.service.model.ReceiptDto;
 import it.gov.pagopa.wispconverter.service.model.session.SessionDataDTO;
+import it.gov.pagopa.wispconverter.util.Constants;
 import it.gov.pagopa.wispconverter.util.EndpointRETrace;
-import it.gov.pagopa.wispconverter.util.ErrorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jboss.logging.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,8 +46,6 @@ public class ReceiptTimerController {
     private final RtReceiptCosmosService rtReceiptCosmosService;
 
     private final RPTExtractorService rptExtractorService;
-
-    private final ErrorUtil errorUtil;
 
     @Value("${wisp-converter.receipttimer-delta-activate.expirationtime.ms}")
     private Long deltaExpirationTime;
@@ -83,6 +84,7 @@ public class ReceiptTimerController {
             ReceiptDto receiptDto = receiptTimerService.peek(tokens.get(0));
             if (receiptDto != null) {
                 String sessionId = receiptDto.getSessionId();
+                MDC.put(Constants.MDC_SESSION_ID, sessionId);
                 SessionDataDTO sessionDataDTO = rptExtractorService.getSessionDataFromSessionId(sessionId);
                 // Update receipts-rt status to PAYING
                 sessionDataDTO.getAllRPTs().forEach(rtReceiptCosmosService::updateStatusToPaying);
