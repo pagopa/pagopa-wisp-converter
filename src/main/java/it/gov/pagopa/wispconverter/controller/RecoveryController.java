@@ -30,6 +30,7 @@ public class RecoveryController {
 
     private static final String BP_RECONCILIATION_OK_BY_SESSIONID = "reconciliation-rt-ok-by-sessionid";
     private static final String BP_RECONCILIATION_KO_BY_SESSIONID = "reconciliation-rt-ko-by-sessionid";
+    private static final String BP_RECONCILIATION_KO_BY_PAYLOAD = "reconciliation-rt-ko-by-payload";
 
     private final RecoveryService recoveryService;
 
@@ -105,6 +106,18 @@ public class RecoveryController {
     public ResponseEntity<Void> recoverKoReceiptToBeReSentBySessionId(@RequestBody RecoveryReceiptBySessionIdRequest request) {
         log.debug("Invoking API operation recoverKoReceiptToBeReSentBySessionId - args: {}", sanitizeInput(request.toString()));
         recoveryService.recoverReceiptKoToBeReSentBySessionIds(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Execute reconciliation for KO receipts by sessionId.", description = "Execute reconciliation of all KO receipts related to the sessionIds of the request", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Recovery"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reconciliation scheduled")
+    })
+    @PostMapping(value = "/sessionIds/ko")
+    @EndpointRETrace(status = WorkflowStatus.RT_RECONCILIATION_PROCESSED, businessProcess = BP_RECONCILIATION_KO_BY_PAYLOAD, reEnabled = true)
+    public ResponseEntity<Void> recoverKoReceipt(@RequestBody RecoveryReceiptByPayloadRequest request) {
+        log.debug("Invoking API operation recoverKoReceipt - args: {}", sanitizeInput(request.toString()));
+        recoveryService.recoverReceiptKoToBeReSentByRPTRequestEntity(request);
         return ResponseEntity.ok().build();
     }
 }

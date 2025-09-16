@@ -16,6 +16,7 @@ import it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDt
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
+import it.gov.pagopa.wispconverter.repository.model.RPTRequestEntity;
 import it.gov.pagopa.wispconverter.repository.model.RTRequestEntity;
 import it.gov.pagopa.wispconverter.repository.model.ReceiptDeadLetterEntity;
 import it.gov.pagopa.wispconverter.repository.model.enumz.*;
@@ -745,6 +746,31 @@ public class ReceiptService {
         this.deleteHangTimerCacheKey(sessionIdDto);
 
         SessionDataDTO sessionDataDTO = rptExtractorService.getSessionDataFromSessionId(sessionId);
+        gov.telematici.pagamenti.ws.papernodo.ObjectFactory objectFactory = new gov.telematici.pagamenti.ws.papernodo.ObjectFactory();
+
+        // retrieve configuration data from cache
+        it.gov.pagopa.gen.wispconverter.client.cache.model.ConfigDataV1Dto configData = configCacheService.getConfigData();
+        Map<String, it.gov.pagopa.gen.wispconverter.client.cache.model.ConfigurationKeyDto> configurations = configData.getConfigurations();
+        Map<String, StationDto> stations = configData.getStations();
+
+        for (RPTContentDTO rpt : sessionDataDTO.getRpts().values()) {
+            handleSingleRptForSendRtKo(rpt, sessionDataDTO, objectFactory, configurations, stations);
+        }
+    }
+
+    // This method sends a negative RT for a corresponding RPTs in the input
+    public void sendRTKoFromRPTRequestEntity(RPTRequestEntity rptRequestEntity ) {
+        String sessionId = rptRequestEntity.getId();
+        // log event
+        log.debug("[sendRTKoFromRPTRequestEntity] Processing session id: {}", sessionId);
+        MDC.put(Constants.MDC_SESSION_ID, sessionId);
+
+        // delete key '2_wisp_timer_hang_{wisp_delete_sessionId}' from cache via APIM call
+        it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDto sessionIdDto = new it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDto();
+        sessionIdDto.setSessionId(sessionId);
+        this.deleteHangTimerCacheKey(sessionIdDto);
+
+        SessionDataDTO sessionDataDTO = rptExtractorService.extractSessionData(rptRequestEntity.getPrimitive(), rptRequestEntity.getPayload());
         gov.telematici.pagamenti.ws.papernodo.ObjectFactory objectFactory = new gov.telematici.pagamenti.ws.papernodo.ObjectFactory();
 
         // retrieve configuration data from cache
