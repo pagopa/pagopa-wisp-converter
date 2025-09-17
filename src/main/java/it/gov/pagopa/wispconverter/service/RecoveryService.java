@@ -290,6 +290,23 @@ public class RecoveryService {
         }
     }
 
+    /**
+     *
+     * @param request this object contains
+     *                sessionId,
+     *                primitive (nodoInviaRPT or nodoInviaCarrelloRPT) and
+     *                payload (SOAP request in gzip format)
+     */
+    @Transactional
+    public void recoverReceiptKoToBeReSentByRPTRequestEntity(RecoveryReceiptByPayloadRequest request) {
+        RPTRequestEntity rptRequestEntity = RPTRequestEntity.builder()
+                .id(request.getSessionId())
+                .partitionKey(String.valueOf(LocalDate.now()))
+                .primitive(request.getPrimitive())
+                .payload(request.getPayload()).build();
+        receiptService.sendRTKoFromRPTRequestEntity(rptRequestEntity);
+    }
+
     public RecoveryReceiptReportResponse recoverReceiptToBeReSentByPartition(RecoveryReceiptByPartitionRequest request) {
         List<String> receiptsIds = request.getPartitionKeys().stream()
                 .map(PartitionKey::new)
