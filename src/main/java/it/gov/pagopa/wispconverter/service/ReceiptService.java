@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static it.gov.pagopa.wispconverter.util.CommonUtility.sanitizeInput;
 import static it.gov.pagopa.wispconverter.util.Constants.PAA_INVIA_RT;
 
 @Service
@@ -763,7 +764,7 @@ public class ReceiptService {
         String sessionId = rptRequestEntity.getId();
         // log event
         log.debug("[sendRTKoFromRPTRequestEntity] Processing session id: {}", sessionId);
-        MDC.put(Constants.MDC_SESSION_ID, sessionId);
+        MDC.put(Constants.MDC_SESSION_ID, sanitizeInput(sessionId));
 
         // delete key '2_wisp_timer_hang_{wisp_delete_sessionId}' from cache via APIM call
         it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDto sessionIdDto = new it.gov.pagopa.gen.wispconverter.client.decouplercaching.model.SessionIdDto();
