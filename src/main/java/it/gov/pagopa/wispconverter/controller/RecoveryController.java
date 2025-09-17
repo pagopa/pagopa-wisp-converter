@@ -113,10 +113,10 @@ public class RecoveryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reconciliation successful.")
     })
-    @PostMapping(value = "/sessionIds/ko-by-request")
+    @PostMapping(value = "/receipts/koByRpt")
     @EndpointRETrace(status = WorkflowStatus.RT_RECONCILIATION_PROCESSED, businessProcess = BP_RECONCILIATION_KO_BY_PAYLOAD, reEnabled = true)
-    public ResponseEntity<Void> recoverKoReceiptByPayload(@RequestBody RecoveryReceiptByPayloadRequest request) {
-        log.debug("Invoking API operation recoverKoReceiptBySOAPPayload - args: {}", sanitizeInput(request.toString()));
+    public ResponseEntity<Void> recoverKoReceiptByRPT(@RequestBody RecoveryReceiptByPayloadRequest request) {
+        log.debug("Invoking API operation recoverKoReceiptByRPT - args: {}", sanitizeInput(request.toString()));
         recoveryService.recoverReceiptKoToBeReSentByRPTRequestEntity(request);
         return ResponseEntity.ok().build();
     }

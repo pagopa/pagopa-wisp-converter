@@ -122,7 +122,7 @@ class RecoveryTest {
 
         doNothing().when(receiptService).sendRTKoFromRPTRequestEntity(any());
 
-        mockMvc.perform(post("/recovery/sessionIds/ko-by-request")
+        mockMvc.perform(post("/recovery/receipts/koByRpt")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isOk());
