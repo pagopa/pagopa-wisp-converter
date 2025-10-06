@@ -106,7 +106,7 @@ data "azurerm_key_vault_secret" "integration_test_station_wisp_password" {
 }
 
 data "azurerm_key_vault_secret" "report_generation_slack_webhook_url" {
-  name         = "report-generation-wisp-slack-webhook-url"
+  name         = "pagopa-pagamenti-report-slack-webhook"
   key_vault_id = data.azurerm_key_vault.domain_key_vault.id
 }
 
