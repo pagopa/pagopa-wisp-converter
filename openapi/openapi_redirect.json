@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "WISP-Converter-redirect",
-    "version": "1.7.4-1-resend-receipt"
+    "version": "1.7.4-2-resend-receipt"
   },
   "servers": [
     {
