@@ -76,6 +76,16 @@ public class RecoveryController {
         return ResponseEntity.ok(recoveryService.recoverReceiptToBeReSent(request));
     }
 
+    @Operation(summary = "Execute reconciliation for OK receipts by receiptId.", description = "Execute reconciliation of all OK receipts related to the receiptId of the request", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Recovery"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reconciliation scheduled")
+    })
+    @PostMapping(value = "/receipts/resend")
+    public ResponseEntity<RecoveryReceiptReportResponse> recoverOkReceiptToBeReSentByReceiptId(@RequestBody RecoveryReceiptRequest request) {
+        log.debug("Invoking API operation recoverOkReceiptToBeReSentByReceiptId - args: {}", sanitizeInput(request.toString()));
+        return ResponseEntity.ok(recoveryService.receiptToBeReSent(request));
+    }
+
     @Operation(summary = "Execute reconciliation for passed receipts by partition.", description = "Execute reconciliation of all receipts contained in the partitions of the request", security = {@SecurityRequirement(name = "ApiKey")}, tags = {"Recovery"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reconciliation scheduled")

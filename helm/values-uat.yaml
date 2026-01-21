@@ -99,7 +99,7 @@ microservice-chart: &microservice-chart
     ECOMMERCE_HANG_TIMEOUT: '600'
     APIM_PATH: 'api.uat.platform.pagopa.it'
     CACHED_REQUESTID_MAPPING_TTL_MINUTES: "1440"
-    CACHE_REFRESH_CRON: "0 */60 * * * *"
+    CACHE_REFRESH_CRON: "0 */1 * * * *" # TODO set like production
     CLIENT_GPD_READ_TIMEOUT: '5000'
     CLIENT_IUVGENERATOR_READ_TIMEOUT: '5000'
     CLIENT_CHECKOUT_READ_TIMEOUT: '5000'
