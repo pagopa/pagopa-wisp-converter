@@ -194,6 +194,11 @@ wisp-converter-service:
     !!merge <<: *ingress
   resources:
     !!merge <<: *resources
+  autoscaling: # TODO rollback
+    !!merge <<: *autoscaling
+    enable: true
+    minReplica: 2
+    maxReplica: 4
   envConfig:
     !!merge <<: *envConfig
   envFieldRef:
