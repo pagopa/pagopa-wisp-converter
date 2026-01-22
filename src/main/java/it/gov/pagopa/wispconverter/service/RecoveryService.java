@@ -322,12 +322,23 @@ public class RecoveryService {
         MDCUtil.setSessionDataInfo("recovery-receipt-ondemand");
         gov.telematici.pagamenti.ws.papernodo.ObjectFactory objectFactory = new gov.telematici.pagamenti.ws.papernodo.ObjectFactory();
         for (String receiptId : request.getReceiptIds()) {
-            recoverSingleReceipt(receiptId, objectFactory, response);
+            recoverSingleReceipt(receiptId, objectFactory, response, true);
         }
         return response;
     }
 
-    private void recoverSingleReceipt(String receiptId, ObjectFactory objectFactory, RecoveryReceiptReportResponse response) {
+    public RecoveryReceiptReportResponse receiptToBeReSent(RecoveryReceiptRequest request) {
+        RecoveryReceiptReportResponse response = RecoveryReceiptReportResponse.builder().receiptStatus(new LinkedList<>()).build();
+        MDCUtil.setSessionDataInfo("recovery-receipt-ok-ondemand");
+        gov.telematici.pagamenti.ws.papernodo.ObjectFactory objectFactory = new gov.telematici.pagamenti.ws.papernodo.ObjectFactory();
+        for (String receiptId : request.getReceiptIds()) {
+            recoverSingleReceipt(receiptId, objectFactory, response, false);
+        }
+        return response;
+    }
+
+    private void recoverSingleReceipt(String receiptId, ObjectFactory objectFactory, RecoveryReceiptReportResponse response, boolean forceRegeneration) {
+
         String sessionId = null;
         try {
             RTRequestEntity rtRequestEntity = findRtRequestEntityIfExists(receiptId);
@@ -369,17 +380,21 @@ public class RecoveryService {
             int overrideId = 1;
             for (RPTContentDTO rpt : rpts) {
 
-                // Re-generate the RT payload in order to actualize values and structural errors
-                // If newly-generated payload is not null, the data in 'receipt-rt' is updated with
-                // extracted data
-                String newlyGeneratedPayload = regenerateReceiptPayload(
-                        rtRequestEntity.getPartitionKey(),
-                        rtRequestEntity.getReceiptType(),
-                        sessionData,
-                        rpt,
-                        objectFactory);
+                String payload = oldReceipt;
+                if (forceRegeneration) {
+                    // Re-generate the RT payload in order to actualize values and structural errors
+                    // If newly-generated payload is not null, the data in 'receipt-rt' is updated with
+                    // extracted data
+                    String newlyGeneratedPayload = regenerateReceiptPayload(
+                            rtRequestEntity.getPartitionKey(),
+                            rtRequestEntity.getReceiptType(),
+                            sessionData,
+                            rpt,
+                            objectFactory);
 
-                String payload = newlyGeneratedPayload != null ? newlyGeneratedPayload : oldReceipt;
+
+                    payload = newlyGeneratedPayload != null ? newlyGeneratedPayload : oldReceipt;
+                }
 
                 // update entity from 'receipt' container with retry 0 and newly-generated payload
                 String rptDomainId = rpt.getRpt().getDomain().getDomainId();

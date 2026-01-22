@@ -4,7 +4,7 @@ microservice-chart: &microservice-chart
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
-    tag: "1.7.4"
+    tag: "1.7.4-2-resend-receipt"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
@@ -24,7 +24,12 @@ microservice-chart: &microservice-chart
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 3
+    replicas: 3 # same as HPA minReplica
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
+        maxSurge: 1
   service:
     create: true
     type: ClusterIP

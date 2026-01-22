@@ -24,24 +24,24 @@ public class ConfigCacheService {
     private it.gov.pagopa.gen.wispconverter.client.cache.model.ConfigDataV1Dto configData;
 
     public void refreshCache() {
-        log.info("loadCache from cache api");
+        log.info("LoadCache from cache API");
 
         try {
             it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi apiInstance = new it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi(configCacheClient);
             if (configData == null) {
                 configData = apiInstance.cache(false);
-                log.info("loadCache from cache api...done. Version: {}}", configData.getVersion());
+                log.info("LoadCache from cache API...done. Version: {}}", configData.getVersion());
             } else {
                 CacheVersionDto id = apiInstance.idV1();
                 if (!configData.getVersion().equals(id.getVersion())) {
                     configData = apiInstance.cache(false);
-                    log.info("loadCache v1 from cache api...done. Version: {}", configData.getVersion());
+                    log.info("LoadCache v1 from cache API...done. Version: {}", configData.getVersion());
                 }
             }
 
-        } catch (RestClientException e) {
+        } catch (AppException | RestClientException e) {
             if (configData != null) {
-                log.error("[WISP] loadCache from cache api failed, using old version. Version: {}", configData.getVersion());
+                log.error("[WISP] LoadCache from cache API failed, using old version. Version: {} . Error occurred: {}", configData.getVersion(), e.getMessage());
             } else {
                 throw new AppException(AppErrorCodeMessageEnum.CLIENT_APICONFIGCACHE,
                         String.format("RestClientException ERROR [%s] - %s", e.getCause().getClass().getCanonicalName(), e.getMessage()));

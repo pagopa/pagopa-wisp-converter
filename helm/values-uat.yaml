@@ -4,7 +4,7 @@ microservice-chart: &microservice-chart
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-wisp-converter
-    tag: "1.7.4"
+    tag: "1.7.4-2-resend-receipt"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
@@ -24,7 +24,12 @@ microservice-chart: &microservice-chart
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 1
+    replicas: 1 # same as HPA minReplica
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
+        maxSurge: 1
   service:
     create: true
     type: ClusterIP
@@ -94,7 +99,7 @@ microservice-chart: &microservice-chart
     ECOMMERCE_HANG_TIMEOUT: '600'
     APIM_PATH: 'api.uat.platform.pagopa.it'
     CACHED_REQUESTID_MAPPING_TTL_MINUTES: "1440"
-    CACHE_REFRESH_CRON: "0 */60 * * * *"
+    CACHE_REFRESH_CRON: "0 */1 * * * *" # TODO set like production
     CLIENT_GPD_READ_TIMEOUT: '5000'
     CLIENT_IUVGENERATOR_READ_TIMEOUT: '5000'
     CLIENT_CHECKOUT_READ_TIMEOUT: '5000'
@@ -189,6 +194,11 @@ wisp-converter-service:
     !!merge <<: *ingress
   resources:
     !!merge <<: *resources
+  autoscaling: # TODO rollback
+    !!merge <<: *autoscaling
+    enable: true
+    minReplica: 2
+    maxReplica: 4
   envConfig:
     !!merge <<: *envConfig
   envFieldRef:
