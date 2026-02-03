@@ -118,12 +118,12 @@ microservice-chart: &microservice-chart
     ECOMMERCE_HANG_TIMEOUT: '600'
     APIM_PATH: 'api.platform.pagopa.it'
     CACHED_REQUESTID_MAPPING_TTL_MINUTES: "2880"
-    CACHE_REFRESH_CRON: "0 */60 * * * *"
+    CACHE_REFRESH_CRON: "0 */15 * * * *"
     CLIENT_GPD_READ_TIMEOUT: '5000'
     CLIENT_IUVGENERATOR_READ_TIMEOUT: '5000'
     CLIENT_CHECKOUT_READ_TIMEOUT: '5000'
     CLIENT_DECOUPLERCACHING_READ_TIMEOUT: '5000'
-    CLIENT_CACHE_READ_TIMEOUT: '5000'
+    CLIENT_CACHE_READ_TIMEOUT: '10000'
     CLIENT_GPD_HOST: 'https://api.platform.pagopa.it/gpd/api/v2'
     CLIENT_IUVGENERATOR_HOST: 'https://api.platform.pagopa.it/shared/pagopa-iuvgenerator/v1'
     CLIENT_CHECKOUT_HOST: 'https://api.platform.pagopa.it/checkout/carts-auth/v1'
