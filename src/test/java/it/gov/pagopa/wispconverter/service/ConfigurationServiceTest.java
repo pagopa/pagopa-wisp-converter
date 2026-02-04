@@ -1,5 +1,6 @@
 package it.gov.pagopa.wispconverter.service;
 
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.model.ConfigurationModel;
 import it.gov.pagopa.wispconverter.repository.ConfigurationRepository;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
@@ -36,6 +37,8 @@ class ConfigurationServiceTest {
     private DecouplerService decouplerService;
     @MockBean
     private ReceiptDeadLetterRepository receiptDeadLetterRepository;
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @Test
     void getCreditorInstitutionsConfiguration() {

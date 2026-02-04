@@ -1,5 +1,6 @@
 package it.gov.pagopa.wispconverter.service;
 
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
 import it.gov.pagopa.wispconverter.repository.CacheRepository;
@@ -45,6 +46,8 @@ class DecouplerServiceTest {
     private ReEventRepositorySecondary reEventRepositorySecondary;
     @MockBean
     private IdempotencyKeyRepositorySecondary idempotencyKeyRepositorySecondary;
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @ParameterizedTest
     @CsvSource({"wisp_nav2iuv_123456IUVMOCK1,123456IUVMOCK1", "wisp_nav2iuv_123456IUVMOCK1_123456IUVMOCK2,123456IUVMOCK1_123456IUVMOCK2"})

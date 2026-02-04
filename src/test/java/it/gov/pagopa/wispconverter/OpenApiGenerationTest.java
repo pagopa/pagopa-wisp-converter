@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter;
 
 import com.azure.cosmos.CosmosAsyncClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.RedirectController;
 import it.gov.pagopa.wispconverter.repository.ConfigurationRepository;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
@@ -57,6 +58,9 @@ class OpenApiGenerationTest {
 
     @MockBean
     private ReceiptDeadLetterRepository receiptDeadLetterRepository;
+
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @Test
     void swaggerSpringPlugin() throws Exception {

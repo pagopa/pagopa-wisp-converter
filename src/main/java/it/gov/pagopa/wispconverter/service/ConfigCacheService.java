@@ -37,17 +37,22 @@ public class ConfigCacheService {
     private final int maxRetry;
     private final long baseBackoffMs;
 
+    private final CacheApiClient cacheApiClient;
+
     @Autowired
     public ConfigCacheService(ApiClient configCacheClient,
                               AppInsightTelemetryClient telemetryClient,
                               @Qualifier("delayExecutor") ScheduledExecutorService delayExecutor,
                               @Value("${config.cache.maxRetry:3}") int maxRetry,
-                              @Value("${config.cache.baseBackoffMs:500}") long baseBackoffMs) {
+                              @Value("${config.cache.baseBackoffMs:500}") long baseBackoffMs,
+                              CacheApiClient cacheApiClient) {
+        // assign directly (single constructor used by Spring and tests)
         this.configCacheClient = configCacheClient;
         this.telemetryClient = telemetryClient;
         this.delayExecutor = delayExecutor;
         this.maxRetry = maxRetry;
         this.baseBackoffMs = baseBackoffMs;
+        this.cacheApiClient = cacheApiClient;
     }
 
     public void refreshCache() {
@@ -63,14 +68,13 @@ public class ConfigCacheService {
     // attempt == maxRetry.
     private void attemptRefresh(int attempt) {
         try {
-            it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi apiInstance = new it.gov.pagopa.gen.wispconverter.client.cache.api.CacheApi(configCacheClient);
             if (configData == null) {
-                configData = apiInstance.cache(false);
+                configData = cacheApiClient.cache(false);
                 log.info("LoadCache from cache API...done. Version: {}", configData.getVersion());
             } else {
-                CacheVersionDto id = apiInstance.idV1();
+                CacheVersionDto id = cacheApiClient.idV1();
                 if (!configData.getVersion().equals(id.getVersion())) {
-                    configData = apiInstance.cache(false);
+                    configData = cacheApiClient.cache(false);
                     log.info("LoadCache v1 from cache API...done. Version: {}", configData.getVersion());
                 } else {
                     log.info("LoadCache check succeeded, cache version unchanged: {}", configData.getVersion());

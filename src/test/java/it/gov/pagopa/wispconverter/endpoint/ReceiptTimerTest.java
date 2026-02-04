@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter.endpoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.wispconverter.Application;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.model.ReceiptTimerRequest;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
 import it.gov.pagopa.wispconverter.service.*;
@@ -38,6 +39,9 @@ public class ReceiptTimerTest {
     private PaaInviaRTSenderService paaInviaRTService;
     @MockBean
     private ServiceBusService paaInviaRTServiceBusService;
+
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @Autowired
     private MockMvc mockMvc;

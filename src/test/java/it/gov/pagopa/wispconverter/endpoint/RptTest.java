@@ -6,6 +6,7 @@ import it.gov.pagopa.gen.wispconverter.client.gpd.model.MultiplePaymentPositionM
 import it.gov.pagopa.gen.wispconverter.client.gpd.model.PaymentPositionModelDto;
 import it.gov.pagopa.gen.wispconverter.client.iuvgenerator.model.IUVGenerationResponseDto;
 import it.gov.pagopa.wispconverter.Application;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.repository.CacheRepository;
 import it.gov.pagopa.wispconverter.repository.NavToIuvMappingRepository;
 import it.gov.pagopa.wispconverter.repository.RPTRequestRepository;
@@ -62,6 +63,8 @@ class RptTest {
     private ConfigCacheService configCacheService;
     @MockBean
     private RPTRequestRepository rptRequestRepository;
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @MockBean
     private it.gov.pagopa.gen.wispconverter.client.iuvgenerator.invoker.ApiClient iuvGeneratorClient;

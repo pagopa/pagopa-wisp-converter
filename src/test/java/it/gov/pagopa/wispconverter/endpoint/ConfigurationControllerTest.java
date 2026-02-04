@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter.endpoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.wispconverter.Application;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.model.ConfigurationModel;
 import it.gov.pagopa.wispconverter.repository.ReceiptDeadLetterRepository;
 import it.gov.pagopa.wispconverter.service.ConfigurationService;
@@ -35,6 +36,9 @@ class ConfigurationControllerTest {
 
     @MockBean
     private ReceiptDeadLetterRepository receiptDeadLetterRepository;
+
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @Autowired
     private MockMvc mvc;
