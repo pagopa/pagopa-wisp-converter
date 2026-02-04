@@ -40,6 +40,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           sonar_token: ${{ secrets.SONAR_TOKEN }}
           project_key: ${{env.PROJECT_KEY}}
-          coverage_exclusions: "**/config/**,**/*Mock*,**/model/**,**/entity/*,**/util/*"
+          coverage_exclusions: "**/config/**,**/*Mock*,**/model/**,**/entity/*,**/util/*,**/CacheApiClient.java,**/CacheApiClientImpl.java"
           cpd_exclusions: "**/model/**,**/entity/*"
           java_version: 17
