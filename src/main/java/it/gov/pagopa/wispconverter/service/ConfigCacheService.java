@@ -46,7 +46,7 @@ public class ConfigCacheService {
                               @Value("${config.cache.maxRetry:3}") int maxRetry,
                               @Value("${config.cache.baseBackoffMs:500}") long baseBackoffMs,
                               CacheApiClient cacheApiClient) {
-        // assign directly (single constructor used by Spring and tests)
+        // assign directly
         this.configCacheClient = configCacheClient;
         this.telemetryClient = telemetryClient;
         this.delayExecutor = delayExecutor;
