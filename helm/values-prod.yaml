@@ -123,7 +123,7 @@ microservice-chart: &microservice-chart
     CLIENT_IUVGENERATOR_READ_TIMEOUT: '5000'
     CLIENT_CHECKOUT_READ_TIMEOUT: '5000'
     CLIENT_DECOUPLERCACHING_READ_TIMEOUT: '5000'
-    CLIENT_CACHE_READ_TIMEOUT: '10000'
+    CLIENT_CACHE_READ_TIMEOUT: '30000'
     CLIENT_GPD_HOST: 'https://api.platform.pagopa.it/gpd/api/v2'
     CLIENT_IUVGENERATOR_HOST: 'https://api.platform.pagopa.it/shared/pagopa-iuvgenerator/v1'
     CLIENT_CHECKOUT_HOST: 'https://api.platform.pagopa.it/checkout/carts-auth/v1'
