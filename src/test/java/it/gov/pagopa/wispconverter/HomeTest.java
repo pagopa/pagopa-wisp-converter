@@ -2,6 +2,7 @@ package it.gov.pagopa.wispconverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gen.wispconverter.client.cache.model.ConfigDataV1Dto;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.model.AppInfoResponse;
 import it.gov.pagopa.wispconverter.repository.CacheRepository;
 import it.gov.pagopa.wispconverter.repository.NavToIuvMappingRepository;
@@ -61,6 +62,8 @@ class HomeTest {
     private ReService reService;
     @MockBean
     private RTMapper rtMapper;
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @MockBean
     @Qualifier("decouplerCachingClient")

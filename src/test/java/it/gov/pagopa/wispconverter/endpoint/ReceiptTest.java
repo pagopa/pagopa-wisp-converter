@@ -3,6 +3,7 @@ package it.gov.pagopa.wispconverter.endpoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gen.wispconverter.client.cache.model.StationCreditorInstitutionDto;
 import it.gov.pagopa.wispconverter.Application;
+import it.gov.pagopa.wispconverter.config.client.AppInsightTelemetryClient;
 import it.gov.pagopa.wispconverter.controller.model.ReceiptRequest;
 import it.gov.pagopa.wispconverter.exception.AppErrorCodeMessageEnum;
 import it.gov.pagopa.wispconverter.exception.AppException;
@@ -16,6 +17,7 @@ import it.gov.pagopa.wispconverter.service.mapper.RTMapper;
 import it.gov.pagopa.wispconverter.service.model.ReceiptDto;
 import it.gov.pagopa.wispconverter.utils.TestUtils;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,6 +72,8 @@ class ReceiptTest {
     private ReService reService;
     @MockBean
     private RTMapper rtMapper;
+    @MockBean
+    private AppInsightTelemetryClient telemetryClient;
 
     @MockBean
     @Qualifier("decouplerCachingClient")
