@@ -63,7 +63,7 @@ jobs:
           JSON: ${{ toJSON(github) }}
 
       - name: Check PR Size
-        uses: pagopa/github-actions-template/check-pr-size@main
+        uses: pagopa/github-actions-template/check-pr-size@8e05805024deadaacb52fc78c5a52293215841dc # main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           ignored_files: 'openapi'
