@@ -202,7 +202,7 @@ wisp-converter-service:
     minReplica: 1
     maxReplica: 1
   envConfig:
-    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics -XX:UseAVX=2"
+    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics"
     !!merge <<: *envConfig
   envFieldRef:
     !!merge <<: *envFieldRef
@@ -229,7 +229,7 @@ wisp-converter-cron:
     minReplica: 1
     maxReplica: 1
   envConfig:
-    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics -XX:UseAVX=2"
+    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics"
     !!merge <<: *envConfig
     CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
     DISABLE_SERVICE_BUS_RECEIVER: 'true'
