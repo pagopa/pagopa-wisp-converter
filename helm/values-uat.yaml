@@ -74,6 +74,7 @@ microservice-chart: &microservice-chart
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig: &envConfig
+    JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
     WEBSITE_SITE_NAME: 'pagopawispconverter' # required to show cloud role name in application insights
     ENV: 'uat'
     APP_LOGGING_LEVEL: 'INFO'
@@ -186,7 +187,7 @@ microservice-chart: &microservice-chart
         repository: ghcr.io/pagopa/pagopa-wisp-converter
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: {}
+      envConfig: {JAVA_OPTS: "-XX:-UseBASE64Intrinsics"}
       envSecret: {}
 # 1 - wisp converter service
 wisp-converter-service:
@@ -202,7 +203,6 @@ wisp-converter-service:
     minReplica: 1
     maxReplica: 1
   envConfig:
-    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics"
     !!merge <<: *envConfig
   envFieldRef:
     !!merge <<: *envFieldRef
@@ -229,7 +229,6 @@ wisp-converter-cron:
     minReplica: 1
     maxReplica: 1
   envConfig:
-    JAVA_TOOL_OPTIONS: "-XX:-UseBASE64Intrinsics"
     !!merge <<: *envConfig
     CRON_JOB_SCHEDULE_RECOVERY_ENABLED: 'true'
     DISABLE_SERVICE_BUS_RECEIVER: 'true'
