@@ -6,10 +6,10 @@ version: 0.328.0
 appVersion: 1.7.8
 dependencies:
   - name: microservice-chart
-    version: 8.0.2
+    version: 8.8.0
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
     alias: wisp-converter-service
   - name: microservice-chart
-    version: 8.0.2
+    version: 8.8.0
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
     alias: wisp-converter-cron
